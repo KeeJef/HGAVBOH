@@ -1,5 +1,6 @@
 from tkinter import *
 import tkinter.font
+from PIL import Image, ImageTk
 
 
 class PaintApp:
@@ -56,11 +57,50 @@ class PaintApp:
             self.y_pos = event.y
 
     def __init__(self, root):
-        drawing_area = Canvas(root)
-        drawing_area.pack()
+
+                # Add buttons for Finishing and Getting a new Word combo
+
+        toolbar = Frame(root,bd=1,relief = RAISED)
+
+        save_img = Image.open("save.png")
+        newwords_img = Image.open("newwords.png")
+        clearcanvas_img = Image.open("clearcanvas.png")
+
+        save_icon = ImageTk.PhotoImage(save_img)
+        newwords_icon = ImageTk.PhotoImage(newwords_img)
+        clearcanvas_icon = ImageTk.PhotoImage(clearcanvas_img)
+
+        save_button = Button(toolbar, image=save_icon)
+        newwords_button = Button(toolbar, image=newwords_icon)
+        clearcanvas_button = Button(toolbar, image=clearcanvas_icon)
+
+        save_button.image = save_icon
+        newwords_button.image = newwords_icon
+        clearcanvas_button.image = clearcanvas_icon
+
+        save_button.pack (side = LEFT, padx=2, pady=2)
+        newwords_button.pack (side = LEFT, padx=2, pady=2)
+        clearcanvas_button.pack (side = LEFT, padx=2, pady=2)
+
+        toolbar.pack(side = TOP, fill= X)
+
+
+        drawing_area = Canvas(root, bd=2, highlightthickness=1, relief='ridge')
+        drawing_area.pack(side = LEFT, fill="both", expand=True)
         drawing_area.bind("<Motion>", self.motion)
         drawing_area.bind("<ButtonPress-1>", self.left_but_down)
         drawing_area.bind("<ButtonRelease-1>", self.left_but_up)
+
+        # Add Text Area for displaying word combos
+
+        textarea =  Text(root)
+        textarea.pack( side = RIGHT )
+
+        textarea.tag_configure('center-big', justify='center', font=('Verdana', 20, 'bold'))
+
+        textarea.insert(tkinter.END, "Just a text Widget",'center-big')
+        textarea.config(state=DISABLED)
+
 
 root = Tk()
 

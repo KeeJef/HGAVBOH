@@ -1,6 +1,8 @@
 from tkinter import *
 import tkinter.font
 from PIL import Image, ImageTk
+import time
+import random
 
 
 class PaintApp:
@@ -37,6 +39,22 @@ class PaintApp:
         self.x2_line_pt = event.x
         self.y2_line_pt = event.y
 
+    def randomWords(self, event=None):
+        counter = 0 
+        Randomwordarray = []
+        with open('concretenounwordlist.txt') as f:
+            wordlist = f.read().splitlines() 
+
+        while counter != 6:
+            Randomwordarray.append(random.choice(wordlist))
+            counter +=1 
+            pass
+        
+        randomString = ' '.join(Randomwordarray)
+
+        return randomString
+
+
     # ---------- CATCH MOUSE MOVEMENT ----------
 
     def motion(self, event=None):
@@ -54,14 +72,19 @@ class PaintApp:
                 event.widget.create_line(self.x_pos, self.y_pos, event.x, event.y, smooth=TRUE)
 
             self.x_pos = event.x
-            self.y_pos = event.y
+            self.y_pos = event.y   
+
+    def getNewWords(self, textarea, event=None):
+        textarea.config(state=NORMAL)
+        textarea.delete('1.0', END)
+        textarea.insert(tkinter.END, self.randomWords(),'center-big')
+
 
     def __init__(self, root):
 
-                # Add buttons for Finishing and Getting a new Word combo
+        # Add buttons for Finishing getting new word combos and clearing the canvas
 
         toolbar = Frame(root,bd=1,relief = RAISED)
-
         save_img = Image.open("save.png")
         newwords_img = Image.open("newwords.png")
         clearcanvas_img = Image.open("clearcanvas.png")
@@ -71,9 +94,9 @@ class PaintApp:
         clearcanvas_icon = ImageTk.PhotoImage(clearcanvas_img)
 
         save_button = Button(toolbar, image=save_icon)
-        newwords_button = Button(toolbar, image=newwords_icon)
-        clearcanvas_button = Button(toolbar, image=clearcanvas_icon)
-
+        newwords_button = Button(toolbar, image=newwords_icon, command =lambda: self.getNewWords(textarea))
+        clearcanvas_button = Button(toolbar, image=clearcanvas_icon, command =lambda: drawing_area.delete('all'))
+        
         save_button.image = save_icon
         newwords_button.image = newwords_icon
         clearcanvas_button.image = clearcanvas_icon
@@ -83,7 +106,8 @@ class PaintApp:
         clearcanvas_button.pack (side = LEFT, padx=2, pady=2)
 
         toolbar.pack(side = TOP, fill= X)
-
+    
+      # Add drawing area
 
         drawing_area = Canvas(root, bd=2, highlightthickness=1, relief='ridge')
         drawing_area.pack(side = LEFT, fill="both", expand=True)
@@ -91,17 +115,15 @@ class PaintApp:
         drawing_area.bind("<ButtonPress-1>", self.left_but_down)
         drawing_area.bind("<ButtonRelease-1>", self.left_but_up)
 
-        # Add Text Area for displaying word combos
+      # Add Text Area for displaying word combos
 
         textarea =  Text(root)
         textarea.pack( side = RIGHT )
+        textarea.tag_configure('center-big', justify='center', font=('Verdana', 20, 'bold')) 
+        textarea.insert(tkinter.END, self.randomWords(),'center-big')
+       # textarea.config(state=DISABLED)
 
-        textarea.tag_configure('center-big', justify='center', font=('Verdana', 20, 'bold'))
-
-        textarea.insert(tkinter.END, "Just a text Widget",'center-big')
-        textarea.config(state=DISABLED)
-
-
+  
 root = Tk()
 
 paint_app = PaintApp(root)

@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter.colorchooser import askcolor
 import tkinter.font
 import webcolors
 from PIL import Image, ImageTk, ImageDraw
@@ -69,8 +70,8 @@ class PaintApp:
 
             # Make sure x and y have a value
             if self.x_pos is not None and self.y_pos is not None:
-                event.widget.create_line(self.x_pos, self.y_pos, event.x, event.y, fill='#a2a832', smooth=TRUE)
-                self.draw.line(((self.x_pos,self.y_pos),(event.x,event.y)),(0,64,0),width=3)
+                event.widget.create_line(self.x_pos, self.y_pos, event.x, event.y, fill=self.color, smooth=TRUE)
+                self.draw.line(((self.x_pos,self.y_pos),(event.x,event.y)),(webcolors.hex_to_rgb(self.color)),width=3)
 
             self.x_pos = event.x
             self.y_pos = event.y   
@@ -89,32 +90,41 @@ class PaintApp:
         drawing_area.delete('all')
         self.image=Image.new("RGB",(drawing_area.winfo_width(),drawing_area.winfo_height()),(255,255,255))
         self.draw=ImageDraw.Draw(self.image)
-
+    
+    def choose_color(self):
+        self.eraser_on = False
+        self.color = askcolor()[1]
 
     def __init__(self, root):
 
         # Add buttons for Finishing getting new word combos and clearing the canvas
 
         toolbar = Frame(root,bd=1,relief = RAISED)
+
         save_img = Image.open("save.png")
         newwords_img = Image.open("newwords.png")
         clearcanvas_img = Image.open("clearcanvas.png")
+        selectcolour_img = Image.open("selectcolour.png")
 
         save_icon = ImageTk.PhotoImage(save_img)
         newwords_icon = ImageTk.PhotoImage(newwords_img)
         clearcanvas_icon = ImageTk.PhotoImage(clearcanvas_img)
+        selectcolour_icon = ImageTk.PhotoImage(selectcolour_img)
 
         save_button = Button(toolbar, image=save_icon, command= self.save)
         newwords_button = Button(toolbar, image=newwords_icon, command =lambda: self.getNewWords(textarea))
         clearcanvas_button = Button(toolbar, image=clearcanvas_icon, command = lambda: self.clear(drawing_area))
+        selectcolour_button = Button(toolbar, image=selectcolour_icon, command= self.choose_color)
         
         save_button.image = save_icon
         newwords_button.image = newwords_icon
         clearcanvas_button.image = clearcanvas_icon
+        selectcolour_button.image = selectcolour_icon
 
         save_button.pack (side = LEFT, padx=2, pady=2)
         newwords_button.pack (side = LEFT, padx=2, pady=2)
         clearcanvas_button.pack (side = LEFT, padx=2, pady=2)
+        selectcolour_button.pack (side = LEFT, padx=2, pady=2)
 
         toolbar.pack(side = TOP, fill= X)
     
@@ -139,9 +149,8 @@ class PaintApp:
         self.image=Image.new("RGB",(drawing_area.winfo_width(),drawing_area.winfo_height()),(255,255,255))
         self.draw=ImageDraw.Draw(self.image)
 
+        self.color = '#000000'
 
-        hexcolour = webcolors.hex_to_rgb('#a2a832')
-        print(hexcolour)
 
   
 root = Tk()

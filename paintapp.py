@@ -128,6 +128,7 @@ class PaintApp:
         clearcanvas_button.pack (side = LEFT, padx=2, pady=2)
         selectcolour_button.pack (side = LEFT, padx=2, pady=2)
         self.choose_size_button.pack (side = LEFT, padx=2, pady=2)
+        self.choose_size_button.set(5)
 
         toolbar.pack(side = TOP, fill= X)
     

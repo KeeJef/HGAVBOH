@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter.colorchooser import askcolor
 import tkinter.font
 import webcolors
-from PIL import Image, ImageTk, ImageDraw
+from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import random
 
 
@@ -70,8 +70,7 @@ class PaintApp:
 
             # Make sure x and y have a value
             if self.x_pos is not None and self.y_pos is not None:
-                event.widget.create_line(self.x_pos, self.y_pos, event.x, event.y, fill=self.color, smooth=TRUE)
-                self.draw.line(((self.x_pos,self.y_pos),(event.x,event.y)),(webcolors.hex_to_rgb(self.color)),width=3)
+                event.widget.create_line(self.x_pos, self.y_pos, event.x, event.y, fill=self.color, capstyle=ROUND, smooth=TRUE, splinesteps=36, width=self.choose_size_button.get())
 
             self.x_pos = event.x
             self.y_pos = event.y   
@@ -82,14 +81,15 @@ class PaintApp:
         textarea.insert(tkinter.END, self.randomWords(),'center-big')
         textarea.config(state=DISABLED)
 
-    def save(self):
-        filename = "temp.jpg"
-        self.image.save(filename)
+    def save(self, drawing_area):
+        x=root.winfo_rootx()+drawing_area.winfo_x()
+        y=root.winfo_rooty()+drawing_area.winfo_y()
+        x1=x+drawing_area.winfo_width()
+        y1=y+drawing_area.winfo_height()
+        ImageGrab.grab().crop((x,y,x1,y1)).save("temp.png")
 
     def clear(self, drawing_area):
         drawing_area.delete('all')
-        self.image=Image.new("RGB",(drawing_area.winfo_width(),drawing_area.winfo_height()),(255,255,255))
-        self.draw=ImageDraw.Draw(self.image)
     
     def choose_color(self):
         self.eraser_on = False
@@ -111,10 +111,12 @@ class PaintApp:
         clearcanvas_icon = ImageTk.PhotoImage(clearcanvas_img)
         selectcolour_icon = ImageTk.PhotoImage(selectcolour_img)
 
-        save_button = Button(toolbar, image=save_icon, command= self.save)
+        save_button = Button(toolbar, image=save_icon, command= lambda: self.save(drawing_area))
         newwords_button = Button(toolbar, image=newwords_icon, command =lambda: self.getNewWords(textarea))
         clearcanvas_button = Button(toolbar, image=clearcanvas_icon, command = lambda: self.clear(drawing_area))
         selectcolour_button = Button(toolbar, image=selectcolour_icon, command= self.choose_color)
+        self.choose_size_button = Scale(toolbar, from_=1, to=10, orient=HORIZONTAL)
+
         
         save_button.image = save_icon
         newwords_button.image = newwords_icon
@@ -125,6 +127,7 @@ class PaintApp:
         newwords_button.pack (side = LEFT, padx=2, pady=2)
         clearcanvas_button.pack (side = LEFT, padx=2, pady=2)
         selectcolour_button.pack (side = LEFT, padx=2, pady=2)
+        self.choose_size_button.pack (side = LEFT, padx=2, pady=2)
 
         toolbar.pack(side = TOP, fill= X)
     
@@ -145,9 +148,6 @@ class PaintApp:
         textarea.config(state=DISABLED)
 
       # Create a PIL copy of the image im drawing
-        root.update()
-        self.image=Image.new("RGB",(drawing_area.winfo_width(),drawing_area.winfo_height()),(255,255,255))
-        self.draw=ImageDraw.Draw(self.image)
 
         self.color = '#000000'
 

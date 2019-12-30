@@ -1,7 +1,7 @@
 from tkinter import *
 import tkinter.font
-from PIL import Image, ImageTk
-import time
+import webcolors
+from PIL import Image, ImageTk, ImageDraw
 import random
 
 
@@ -69,7 +69,8 @@ class PaintApp:
 
             # Make sure x and y have a value
             if self.x_pos is not None and self.y_pos is not None:
-                event.widget.create_line(self.x_pos, self.y_pos, event.x, event.y, smooth=TRUE)
+                event.widget.create_line(self.x_pos, self.y_pos, event.x, event.y, fill='#a2a832', smooth=TRUE)
+                self.draw.line(((self.x_pos,self.y_pos),(event.x,event.y)),(0,64,0),width=3)
 
             self.x_pos = event.x
             self.y_pos = event.y   
@@ -78,6 +79,16 @@ class PaintApp:
         textarea.config(state=NORMAL)
         textarea.delete('1.0', END)
         textarea.insert(tkinter.END, self.randomWords(),'center-big')
+        textarea.config(state=DISABLED)
+
+    def save(self):
+        filename = "temp.jpg"
+        self.image.save(filename)
+
+    def clear(self, drawing_area):
+        drawing_area.delete('all')
+        self.image=Image.new("RGB",(drawing_area.winfo_width(),drawing_area.winfo_height()),(255,255,255))
+        self.draw=ImageDraw.Draw(self.image)
 
 
     def __init__(self, root):
@@ -93,9 +104,9 @@ class PaintApp:
         newwords_icon = ImageTk.PhotoImage(newwords_img)
         clearcanvas_icon = ImageTk.PhotoImage(clearcanvas_img)
 
-        save_button = Button(toolbar, image=save_icon)
+        save_button = Button(toolbar, image=save_icon, command= self.save)
         newwords_button = Button(toolbar, image=newwords_icon, command =lambda: self.getNewWords(textarea))
-        clearcanvas_button = Button(toolbar, image=clearcanvas_icon, command =lambda: drawing_area.delete('all'))
+        clearcanvas_button = Button(toolbar, image=clearcanvas_icon, command = lambda: self.clear(drawing_area))
         
         save_button.image = save_icon
         newwords_button.image = newwords_icon
@@ -121,7 +132,16 @@ class PaintApp:
         textarea.pack( side = RIGHT )
         textarea.tag_configure('center-big', justify='center', font=('Verdana', 20, 'bold')) 
         textarea.insert(tkinter.END, self.randomWords(),'center-big')
-       # textarea.config(state=DISABLED)
+        textarea.config(state=DISABLED)
+
+      # Create a PIL copy of the image im drawing
+        root.update()
+        self.image=Image.new("RGB",(drawing_area.winfo_width(),drawing_area.winfo_height()),(255,255,255))
+        self.draw=ImageDraw.Draw(self.image)
+
+
+        hexcolour = webcolors.hex_to_rgb('#a2a832')
+        print(hexcolour)
 
   
 root = Tk()

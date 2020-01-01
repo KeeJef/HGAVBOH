@@ -152,15 +152,15 @@ class PaintApp:
         textarea.tag_configure('center-big', justify='center', font=('Verdana', 20, 'bold')) 
         textarea.insert(tkinter.END, self.randomWords(),'center-big')
         textarea.config(state=DISABLED)
-
-      # Create a PIL copy of the image im drawing
-
         self.color = '#000000'
+
+        
+
 
 
   
 root = Tk()
-
+root.title('Human Art Generation Interface')
 paint_app = PaintApp(root)
 
 root.mainloop()

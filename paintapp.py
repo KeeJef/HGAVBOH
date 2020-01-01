@@ -3,8 +3,10 @@ from tkinter.colorchooser import askcolor
 import tkinter.font
 import webcolors
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
+import hashlib
 import random
 
+blockhash = '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824' #hardcoded for now 
 
 class PaintApp:
 
@@ -41,16 +43,19 @@ class PaintApp:
         self.y2_line_pt = event.y
 
     def randomWords(self, event=None):
-        counter = 0 
+
+        nonce =  str(random.randint(0, 100000000))
+        factornonce = nonce + blockhash
+        factornonce = factornonce.encode('utf-8')
+        hashseed = hashlib.blake2b(factornonce)
+        hashseed = hashseed.hexdigest()
+        random.seed(hashseed)
+
         Randomwordarray = []
         with open('concretenounwordlist.txt') as f:
             wordlist = f.read().splitlines() 
 
-        while counter != 6:
-            Randomwordarray.append(random.choice(wordlist))
-            counter +=1 
-            pass
-        
+        Randomwordarray = random.sample(wordlist, k=6)
         randomString = ' '.join(Randomwordarray)
 
         return randomString

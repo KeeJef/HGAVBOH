@@ -1,4 +1,4 @@
-Problem 
+## Problem
 
 CAPTCHAs (Completely Automated Public Turing tests to tell Computers and Humans Apart) were invented in the late 90s early 2000’s they have a few major issues 
 
@@ -9,7 +9,7 @@ CAPTCHAs (Completely Automated Public Turing tests to tell Computers and Humans 
 
 Therefore it is useful to create a new scheme to verify humanness for use in both decentralised networks and to act as a global humanness proof voucher for the internet. 
 
-Solution
+## Solution
 
 Understanding natural human language, organising visual space, relating unrelated words and creating art are all things computers struggle to do in a way that looks human. These are all elements of the HGAVBOH (Human Generated Art Verified By Other Humans) system. The basic scheme is as follows. 
 

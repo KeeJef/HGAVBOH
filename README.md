@@ -1,3 +1,5 @@
+![Imgur](https://i.imgur.com/y71NcC9.png)
+
 ## Problem
 
 CAPTCHAs (Completely Automated Public Turing tests to tell Computers and Humans Apart) were invented in the late 90s early 2000’s they have a few major issues 
@@ -12,8 +14,6 @@ Therefore it is useful to create a new scheme to verify humanness for use in bot
 ## Solution
 
 Understanding natural human language, organising visual space, relating unrelated words and creating art are all things computers struggle to do in a way that looks human. These are all elements of the HGAVBOH (Human Generated Art Verified By Other Humans) system. The basic scheme is as follows. 
-
-![Imgur](https://i.imgur.com/hGwP7Cv.png)
 
 1. Generate an artwork based on 6 randomly selected concrete nouns, example above.
 2. Download all the artworks waiting to be verified and secretly vote (Commit reveal) on which ones you think are human or computer generated, when vote you must also submit the artwork you just created.

@@ -6,6 +6,10 @@ from tkinter import ttk
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import hashlib
 import random
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives import serialization
+import os.path
+from os import path
 
 blockhash = '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824' #hardcoded for now 
 
@@ -101,10 +105,45 @@ class PaintApp:
         self.eraser_on = False
         self.color = askcolor()[1]
 
+    def getImages(self):
+
+        print("")
+
+    def generateKeypair(self):
+
+        if not path.exists("privkey.txt"):
+            
+            private_key = Ed25519PrivateKey.generate()
+            public_key = private_key.public_key()
+            textualPublicKey = public_key.public_bytes(encoding=serialization.Encoding.PEM,format=serialization.PublicFormat.SubjectPublicKeyInfo)
+            textualPrivateKey = private_key.private_bytes(encoding=serialization.Encoding.PEM,format=serialization.PrivateFormat.PKCS8,encryption_algorithm=serialization.NoEncryption())
+
+            encoding = 'utf-8'
+            textualPublicKey = textualPublicKey.decode(encoding)
+            textualPrivateKey = textualPrivateKey.decode(encoding)
+
+            f = open("pubkey.txt", "a")
+            f.write(textualPublicKey)
+            f.close()
+
+            f = open("privkey.txt", "a")
+            f.write(textualPrivateKey)
+            f.close()
+            pass
+
+    def signHashes(self):
+        print("")
+
+    def updateImgMetaTags(self):
+        print("")
+
+
     def __init__(self, root):
 
+        #GenerateKeys
+        self.generateKeypair()
+        
         #tabs
-
         tabcontrol = ttk.Notebook(root)
         tab1 = ttk.Frame(tabcontrol)
         tabcontrol.add(tab1, text="Create")
@@ -163,7 +202,29 @@ class PaintApp:
         textarea.insert(tkinter.END, self.randomWords(),'center-big')
         textarea.config(state=DISABLED)
         self.color = '#000000'
+
+        testarray = ["dog","cat","pig"]
         
+     # Add list box for verification
+        counter = 0
+        listbox = Listbox(tab2)
+        while counter != len(testarray):
+            listbox.insert(counter,testarray[counter])
+            counter += 1
+            pass
+        listbox.pack(side =LEFT)
+
+    # Canvas for Displaying images for Verfication 
+
+        viewingcanvas = Canvas(tab2, bd=2, highlightthickness=1, relief='ridge')
+        viewingcanvas.pack(side = RIGHT, fill="both", expand=True)
+        self.img = ImageTk.PhotoImage(Image.open("temp.png"))  
+        viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
+        
+        
+        
+          
+
 
 root = Tk()
 root.title('Human Art Generation Interface')

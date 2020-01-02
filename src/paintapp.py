@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter.colorchooser import askcolor
 import tkinter.font
 import webcolors
+from tkinter import ttk
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import hashlib
 import random
@@ -19,7 +20,7 @@ class PaintApp:
     # x and y positions for drawing with pencil
     x_pos, y_pos = None, None
 
-
+    
     # ---------- CATCH MOUSE UP ----------
 
     def left_but_down(self, event=None):
@@ -102,9 +103,18 @@ class PaintApp:
 
     def __init__(self, root):
 
+        #tabs
+
+        tabcontrol = ttk.Notebook(root)
+        tab1 = ttk.Frame(tabcontrol)
+        tabcontrol.add(tab1, text="Create")
+        tab2 = ttk.Frame(tabcontrol)
+        tabcontrol.add(tab2, text="Verify")
+        tabcontrol.pack(expan = 1,fill = "both")
+
         # Add buttons for Finishing getting new word combos and clearing the canvas
 
-        toolbar = Frame(root,bd=1,relief = RAISED)
+        toolbar = Frame(tab1,bd=1,relief = RAISED)
 
         save_img = Image.open("save.png")
         newwords_img = Image.open("newwords.png")
@@ -139,7 +149,7 @@ class PaintApp:
     
       # Add drawing area
 
-        drawing_area = Canvas(root, bd=2, highlightthickness=1, relief='ridge')
+        drawing_area = Canvas(tab1, bd=2, highlightthickness=1, relief='ridge')
         drawing_area.pack(side = LEFT, fill="both", expand=True)
         drawing_area.bind("<Motion>", self.motion)
         drawing_area.bind("<ButtonPress-1>", self.left_but_down)
@@ -147,18 +157,14 @@ class PaintApp:
 
       # Add Text Area for displaying word combos
 
-        textarea =  Text(root)
+        textarea =  Text(tab1)
         textarea.pack( side = RIGHT )
         textarea.tag_configure('center-big', justify='center', font=('Verdana', 20, 'bold')) 
         textarea.insert(tkinter.END, self.randomWords(),'center-big')
         textarea.config(state=DISABLED)
         self.color = '#000000'
-
         
 
-
-
-  
 root = Tk()
 root.title('Human Art Generation Interface')
 paint_app = PaintApp(root)

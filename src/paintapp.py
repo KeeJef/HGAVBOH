@@ -5,9 +5,13 @@ import webcolors
 from tkinter import ttk
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import hashlib
+import time
 import random
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
+import piexif
 import os.path
 from os import path
 
@@ -49,8 +53,8 @@ class PaintApp:
 
     def randomWords(self, event=None):
 
-        nonce =  str(random.randint(0, 100000000))
-        factornonce = nonce + blockhash
+        self.nonce =  str(random.randint(0, 100000000))
+        factornonce = self.nonce + blockhash
         factornonce = factornonce.encode('utf-8')
         hashseed = hashlib.blake2b(factornonce)
         hashseed = hashseed.hexdigest()
@@ -92,11 +96,42 @@ class PaintApp:
         textarea.config(state=DISABLED)
 
     def save(self, drawing_area):
-        x=root.winfo_rootx()+drawing_area.winfo_x()
-        y=root.winfo_rooty()+drawing_area.winfo_y()
+        x=self.tab1.winfo_rootx()+drawing_area.winfo_x()
+        y=self.tab1.winfo_rooty()+drawing_area.winfo_y()
         x1=x+drawing_area.winfo_width()
         y1=y+drawing_area.winfo_height()
-        ImageGrab.grab().crop((x,y,x1,y1)).save("temp.png")
+        ImageGrab.grab().crop((x,y,x1,y1)).save(self.nonce+".jpeg")
+        self.submitToNetwork()
+
+    def submitToNetwork(self):
+        public_key = self.private_key.public_key()
+        public_key= public_key.public_bytes(encoding=serialization.Encoding.PEM,format=serialization.PublicFormat.SubjectPublicKeyInfo)
+        public_key= public_key.decode('utf-8')
+        image = Image.open(self.nonce +".jpeg").tobytes()
+        imagehash =  hashlib.blake2b(image).hexdigest()
+        timestamp = str(int(time.time()))
+        nonce = self.nonce
+        
+        #Add cryptokeys here 
+
+        concatValue = public_key +'|'+ timestamp +'|'+ nonce +'|'+ imagehash +'|'+ blockhash
+        singedConcat = self.signHashes(concatValue)
+        self.exitImageExif(singedConcat)
+        
+        
+
+    def exitImageExif(self, singedInfo):
+
+        singedInfoString = str(singedInfo[0])
+        singedInfoString += "!!!!!!" + str(singedInfo[1])
+        
+        exif_ifd = {piexif.ExifIFD.CameraOwnerName: singedInfoString}
+        exif_dict = {"Exif":exif_ifd}
+
+        exif_bytes = piexif.dump(exif_dict)
+        piexif.insert(exif_bytes,self.nonce + ".jpeg")
+
+
 
     def clear(self, drawing_area):
         drawing_area.delete('all')
@@ -109,7 +144,9 @@ class PaintApp:
 
         print("")
 
-    def generateKeypair(self):
+    def generateOrLoadKeypair(self):
+
+        encoding = 'utf-8'
 
         if not path.exists("privkey.txt"):
             
@@ -118,7 +155,6 @@ class PaintApp:
             textualPublicKey = public_key.public_bytes(encoding=serialization.Encoding.PEM,format=serialization.PublicFormat.SubjectPublicKeyInfo)
             textualPrivateKey = private_key.private_bytes(encoding=serialization.Encoding.PEM,format=serialization.PrivateFormat.PKCS8,encryption_algorithm=serialization.NoEncryption())
 
-            encoding = 'utf-8'
             textualPublicKey = textualPublicKey.decode(encoding)
             textualPrivateKey = textualPrivateKey.decode(encoding)
 
@@ -129,10 +165,33 @@ class PaintApp:
             f = open("privkey.txt", "a")
             f.write(textualPrivateKey)
             f.close()
+
+            self.private_key = private_key
+
+            return
+
+        f=open("privkey.txt", "r")
+        if f.mode == 'r':
+            contents =f.read()
             pass
 
-    def signHashes(self):
-        print("")
+        textualPrivateKey = contents.encode(encoding)
+        private_key = serialization.load_pem_private_key(data=textualPrivateKey,password=None,backend=default_backend())
+        
+        self.private_key = private_key
+
+
+    def signHashes(self, dataToSign):
+
+        dataToSign = str.encode(dataToSign)
+        signature = self.private_key.sign(dataToSign)  
+
+        public_key = self.private_key.public_key()      
+        public_key.verify(signature, dataToSign)
+
+        signeddata = [signature, dataToSign]
+
+        return signeddata
 
     def updateImgMetaTags(self):
         print("")
@@ -141,19 +200,19 @@ class PaintApp:
     def __init__(self, root):
 
         #GenerateKeys
-        self.generateKeypair()
+        self.generateOrLoadKeypair()
         
         #tabs
         tabcontrol = ttk.Notebook(root)
-        tab1 = ttk.Frame(tabcontrol)
-        tabcontrol.add(tab1, text="Create")
+        self.tab1 = ttk.Frame(tabcontrol)
+        tabcontrol.add(self.tab1, text="Create")
         tab2 = ttk.Frame(tabcontrol)
         tabcontrol.add(tab2, text="Verify")
         tabcontrol.pack(expan = 1,fill = "both")
 
         # Add buttons for Finishing getting new word combos and clearing the canvas
 
-        toolbar = Frame(tab1,bd=1,relief = RAISED)
+        toolbar = Frame(self.tab1,bd=1,relief = RAISED)
 
         save_img = Image.open("save.png")
         newwords_img = Image.open("newwords.png")
@@ -188,7 +247,7 @@ class PaintApp:
     
       # Add drawing area
 
-        drawing_area = Canvas(tab1, bd=2, highlightthickness=1, relief='ridge')
+        drawing_area = Canvas(self.tab1, bd=2, highlightthickness=1, relief='ridge')
         drawing_area.pack(side = LEFT, fill="both", expand=True)
         drawing_area.bind("<Motion>", self.motion)
         drawing_area.bind("<ButtonPress-1>", self.left_but_down)
@@ -196,7 +255,7 @@ class PaintApp:
 
       # Add Text Area for displaying word combos
 
-        textarea =  Text(tab1)
+        textarea =  Text(self.tab1)
         textarea.pack( side = RIGHT )
         textarea.tag_configure('center-big', justify='center', font=('Verdana', 20, 'bold')) 
         textarea.insert(tkinter.END, self.randomWords(),'center-big')
@@ -214,11 +273,11 @@ class PaintApp:
             pass
         listbox.pack(side =LEFT)
 
-    # Canvas for Displaying images for Verfication 
+    # Canvas for Displaying images for Verification 
 
         viewingcanvas = Canvas(tab2, bd=2, highlightthickness=1, relief='ridge')
         viewingcanvas.pack(side = RIGHT, fill="both", expand=True)
-        self.img = ImageTk.PhotoImage(Image.open("temp.png"))  
+        self.img = ImageTk.PhotoImage(Image.open("temp.jpeg"))  
         viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
         
         

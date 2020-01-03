@@ -3,7 +3,9 @@ from tkinter.colorchooser import askcolor
 import tkinter.font
 import webcolors
 import requests
+import json
 from tkinter import ttk
+from types import SimpleNamespace as Namespace
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import hashlib
 import time
@@ -143,6 +145,29 @@ class PaintApp:
         files = {'file': (self.nonce+'.jpeg', open( self.nonce +'.jpeg', 'rb')),}
         response = requests.post('http://163.172.168.41:8888/services/files/upload/newdir/'+ self.nonce + '.jpeg', cookies=cookies, files=files)
 
+    def fetchImages(self):
+        counter = 0
+        imageFileNameList = []
+        self.loadedimages = []
+
+        headers = {'Content-Type': 'application/json',}
+        data = '{ "userName": "master", "password": "secret" }'
+        response = requests.post('http://163.172.168.41:8888/services/auth/login', headers=headers, data=data)
+        cookies = response.cookies
+        response = requests.get('http://163.172.168.41:8888/services/files/list/newdir', cookies=cookies)
+        jsonresponse  = json.loads(response.text)
+        jsonresponse = jsonresponse['fileInfo']
+
+        while len(jsonresponse)!= counter:
+            imageFileNameList.append(jsonresponse[counter]['filePath'])
+            counter += 1
+            pass
+        counter = 0
+        while len(imageFileNameList) != counter:
+            self.loadedimages.append(requests.get('http://163.172.168.41:8888/services/files/download/newdir/' + imageFileNameList[counter], cookies=cookies))
+            counter += 1
+            pass
+
 
 
     def clear(self, drawing_area):
@@ -151,10 +176,6 @@ class PaintApp:
     def choose_color(self):
         self.eraser_on = False
         self.color = askcolor()[1]
-
-    def getImages(self):
-
-        print("")
 
     def generateOrLoadKeypair(self):
 
@@ -213,6 +234,9 @@ class PaintApp:
 
         #GenerateKeys
         self.generateOrLoadKeypair()
+
+        #Pre fetch images for verfication
+        self.fetchImages()
         
         #tabs
         tabcontrol = ttk.Notebook(root)

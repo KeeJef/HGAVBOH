@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter.colorchooser import askcolor
 import tkinter.font
 import webcolors
+import requests
 from tkinter import ttk
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import hashlib
@@ -130,6 +131,17 @@ class PaintApp:
 
         exif_bytes = piexif.dump(exif_dict)
         piexif.insert(exif_bytes,self.nonce + ".jpeg")
+
+        self.uploadfile()
+
+    def uploadfile(self):
+
+        headers = {'Content-Type': 'application/json',}
+        data = '{ "userName": "master", "password": "secret" }'
+        response = requests.post('http://163.172.168.41:8888/services/auth/login', headers=headers, data=data)
+        cookies = response.cookies
+        files = {'file': (self.nonce+'.jpeg', open( self.nonce +'.jpeg', 'rb')),}
+        response = requests.post('http://163.172.168.41:8888/services/files/upload/newdir/'+ self.nonce + '.jpeg', cookies=cookies, files=files)
 
 
 
@@ -280,10 +292,6 @@ class PaintApp:
         self.img = ImageTk.PhotoImage(Image.open("temp.jpeg"))  
         viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
         
-        
-        
-          
-
 
 root = Tk()
 root.title('Human Art Generation Interface')

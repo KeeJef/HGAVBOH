@@ -4,6 +4,7 @@ import tkinter.font
 import webcolors
 import requests
 import json
+from io import BytesIO
 from tkinter import ttk
 from types import SimpleNamespace as Namespace
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
@@ -162,13 +163,22 @@ class PaintApp:
             imageFileNameList.append(jsonresponse[counter]['filePath'])
             counter += 1
             pass
+        self.imageFileNameList = imageFileNameList
         counter = 0
         while len(imageFileNameList) != counter:
             self.loadedimages.append(requests.get('http://163.172.168.41:8888/services/files/download/newdir/' + imageFileNameList[counter], cookies=cookies))
             counter += 1
             pass
 
-
+    def onselect(self,evt):
+        # Note here that Tkinter passes an event object to onselect()
+        w = evt.widget
+        index = int(w.curselection()[0])
+        value = w.get(index)
+        self.img = ImageTk.PhotoImage(Image.open(BytesIO(self.loadedimages[index].content)))
+        self.viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
+        # print ('You selected item %d: "%s"' % (index, value))
+        return
 
     def clear(self, drawing_area):
         drawing_area.delete('all')
@@ -235,7 +245,7 @@ class PaintApp:
         #GenerateKeys
         self.generateOrLoadKeypair()
 
-        #Pre fetch images for verfication
+        #Pre fetch images for verification
         self.fetchImages()
         
         #tabs
@@ -297,24 +307,23 @@ class PaintApp:
         textarea.insert(tkinter.END, self.randomWords(),'center-big')
         textarea.config(state=DISABLED)
         self.color = '#000000'
-
-        testarray = ["dog","cat","pig"]
         
      # Add list box for verification
         counter = 0
         listbox = Listbox(tab2)
-        while counter != len(testarray):
-            listbox.insert(counter,testarray[counter])
+        while counter != len(self.imageFileNameList):
+            listbox.insert(counter,self.imageFileNameList[counter])
             counter += 1
             pass
+        listbox.bind('<<ListboxSelect>>', self.onselect)
         listbox.pack(side =LEFT)
 
     # Canvas for Displaying images for Verification 
 
-        viewingcanvas = Canvas(tab2, bd=2, highlightthickness=1, relief='ridge')
-        viewingcanvas.pack(side = RIGHT, fill="both", expand=True)
-        self.img = ImageTk.PhotoImage(Image.open("temp.jpeg"))  
-        viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
+        self.viewingcanvas = Canvas(tab2, bd=2, highlightthickness=1, relief='ridge')
+        self.viewingcanvas.pack(side = RIGHT, fill="both", expand=True)
+        self.img = ImageTk.PhotoImage(Image.open(BytesIO(self.loadedimages[0].content)))
+        self.viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
         
 
 root = Tk()

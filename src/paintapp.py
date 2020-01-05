@@ -318,13 +318,42 @@ class PaintApp:
         listbox.bind('<<ListboxSelect>>', self.onselect)
         listbox.pack(side =LEFT)
 
-    # Canvas for Displaying images for Verification 
+        #buttons for verifciation panel 
+
+        bottomframe= Frame(tab2,bd=1,relief = RAISED)
+
+        tick_img = Image.open("tick.png")
+        tick_icon = ImageTk.PhotoImage(tick_img)
+        tick_button = Button(bottomframe, image=tick_icon)
+        tick_button.image = tick_icon
+        tick_button.pack (side=tkinter.LEFT, anchor=tkinter.CENTER, padx=2, pady=2)
+
+        cross_img = Image.open("cross.png")
+        cross_icon = ImageTk.PhotoImage(cross_img)
+        cross_button = Button(bottomframe, image=cross_icon)
+        cross_button.image = cross_icon
+        cross_button.pack (side = tkinter.RIGHT ,anchor=tkinter.CENTER, padx=2, pady=2)
+
+        bottomframe.pack(side = BOTTOM)
+
+       # Canvas for Displaying images for Verification 
 
         self.viewingcanvas = Canvas(tab2, bd=2, highlightthickness=1, relief='ridge')
-        self.viewingcanvas.pack(side = RIGHT, fill="both", expand=True)
+        self.viewingcanvas.pack(side =LEFT, fill="both", expand=True)
+        
         self.img = ImageTk.PhotoImage(Image.open(BytesIO(self.loadedimages[0].content)))
         self.viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
-        
+
+
+        #Text Area for verification words 
+
+        verifytextarea =  Text(tab2)
+        verifytextarea.pack( side = RIGHT )
+        verifytextarea.tag_configure('center-big', justify='center', font=('Verdana', 20, 'bold')) 
+        verifytextarea.insert(tkinter.END, self.randomWords(),'center-big')
+        verifytextarea.config(state=DISABLED)
+        self.color = '#000000'
+
 
 root = Tk()
 root.title('Human Art Generation Interface')

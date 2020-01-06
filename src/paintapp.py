@@ -118,7 +118,7 @@ class PaintApp:
         
         #Add cryptokeys here 
 
-        concatValue = public_key +'|'+ timestamp +'|'+ nonce +'|'+ imagehash +'|'+ blockhash
+        concatValue = public_key +'||'+ timestamp +'||'+ nonce +'||'+ imagehash +'||'+ blockhash
         singedConcat = self.signHashes(concatValue)
         self.exitImageExif(singedConcat)
         
@@ -177,11 +177,48 @@ class PaintApp:
         value = w.get(index)
         self.img = ImageTk.PhotoImage(Image.open(BytesIO(self.loadedimages[index].content)))
         self.viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
+
+        exifdata = self.dumpRelevantExit((BytesIO(self.loadedimages[index].content)))
+        derivedwords = self.getWordsFromNonceHash(exifdata[2],exifdata[4])
+       
+        self.verifytextarea.config(state=NORMAL)
+        self.verifytextarea.delete('1.0', END)
+        self.verifytextarea.insert(tkinter.END, derivedwords,'center-big')
+        self.verifytextarea.config(state=DISABLED)
+
         # print ('You selected item %d: "%s"' % (index, value))
         return
 
+    def dumpRelevantExit(self, im):
+
+        im = Image.open(im)
+        exif_dict = piexif.load(im.info["exif"])
+        exifdata = exif_dict['Exif'][42032]
+        exifdata = exifdata.decode('utf-8')
+        exifdata = str(exifdata)
+        sectionedExif = exifdata.split("||")
+        sectionedExif[4] = sectionedExif[4][:-1]
+        return sectionedExif
+
+
     def clear(self, drawing_area):
         drawing_area.delete('all')
+
+    def getWordsFromNonceHash(self, nonce, hashobj):
+        factornonce = nonce + hashobj
+        factornonce = factornonce.encode('utf-8')
+        hashseed = hashlib.blake2b(factornonce)
+        hashseed = hashseed.hexdigest()
+        random.seed(hashseed)
+
+        Randomwordarray = []
+        with open('concretenounwordlist.txt') as f:
+            wordlist = f.read().splitlines() 
+
+        Randomwordarray = random.sample(wordlist, k=6)
+        randomString = ' '.join(Randomwordarray)
+
+        return randomString
     
     def choose_color(self):
         self.eraser_on = False
@@ -303,10 +340,20 @@ class PaintApp:
 
         textarea =  Text(self.tab1)
         textarea.pack( side = RIGHT )
-        textarea.tag_configure('center-big', justify='center', font=('Verdana', 20, 'bold')) 
+        textarea.tag_configure('center-big',wrap=WORD, justify='center', font=('Verdana', 20, 'bold')) 
         textarea.insert(tkinter.END, self.randomWords(),'center-big')
         textarea.config(state=DISABLED)
         self.color = '#000000'
+
+        #Create text area for verification 
+        self.verifytextarea =  Text(tab2)
+        self.verifytextarea.tag_configure('center-big', wrap=WORD, justify='center', font=('Verdana', 20, 'bold')) 
+        
+
+        #Create viewing canvas in prep to be accept mapping from listbox
+
+        self.viewingcanvas = Canvas(tab2, bd=2, highlightthickness=1, relief='ridge')
+
         
      # Add list box for verification
         counter = 0
@@ -316,6 +363,9 @@ class PaintApp:
             counter += 1
             pass
         listbox.bind('<<ListboxSelect>>', self.onselect)
+        listbox.select_set(0)
+        listbox.event_generate("<<ListboxSelect>>")
+
         listbox.pack(side =LEFT)
 
         #buttons for verifciation panel 
@@ -336,24 +386,14 @@ class PaintApp:
 
         bottomframe.pack(side = BOTTOM)
 
-       # Canvas for Displaying images for Verification 
+       # Pack viewing canvas
 
-        self.viewingcanvas = Canvas(tab2, bd=2, highlightthickness=1, relief='ridge')
         self.viewingcanvas.pack(side =LEFT, fill="both", expand=True)
         
-        self.img = ImageTk.PhotoImage(Image.open(BytesIO(self.loadedimages[0].content)))
-        self.viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
-
-
         #Text Area for verification words 
 
-        verifytextarea =  Text(tab2)
-        verifytextarea.pack( side = RIGHT )
-        verifytextarea.tag_configure('center-big', justify='center', font=('Verdana', 20, 'bold')) 
-        verifytextarea.insert(tkinter.END, self.randomWords(),'center-big')
-        verifytextarea.config(state=DISABLED)
-        self.color = '#000000'
-
+        
+        self.verifytextarea.pack( side = RIGHT )
 
 root = Tk()
 root.title('Human Art Generation Interface')

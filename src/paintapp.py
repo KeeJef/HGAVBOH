@@ -127,7 +127,7 @@ class PaintApp:
     def exitImageExif(self, singedInfo):
 
         singedInfoString = str(singedInfo[0])
-        singedInfoString += "!!!!!!" + str(singedInfo[1])
+        singedInfoString += "!!!!!!" + str(singedInfo[1]) # Something happens here which fucks with my Public key formatting
         
         exif_ifd = {piexif.ExifIFD.CameraOwnerName: singedInfoString}
         exif_dict = {"Exif":exif_ifd}
@@ -167,7 +167,36 @@ class PaintApp:
         counter = 0
         while len(imageFileNameList) != counter:
             self.loadedimages.append(requests.get('http://163.172.168.41:8888/services/files/download/newdir/' + imageFileNameList[counter], cookies=cookies))
+
             counter += 1
+            pass
+    
+    def verifyimages(self):
+        counter = 1 
+
+        while len(self.loadedimages) != counter:
+
+            exifdata = self.dumpRelevantExit((BytesIO(self.loadedimages[counter].content)))
+            signatures = exifdata[0]
+            signaturessplit = signatures.split("!!!!!!")
+            bytestring = signaturessplit[1]
+            bytestring= bytestring[2:]
+            bytestring = bytes(bytestring, encoding= 'utf-8')
+
+
+            publickey = serialization.load_pem_public_key(bytestring, backend=default_backend())
+            publickey.verify(signaturesplit[0], exifdata)
+
+
+            timestamp = exifdata[1]
+            nonce = exifdata[2]
+            imagehash = exifdata[3]
+            blockhash = exifdata[4]
+
+
+
+
+            counter += 1 
             pass
 
     def onselect(self,evt):
@@ -284,6 +313,7 @@ class PaintApp:
 
         #Pre fetch images for verification
         self.fetchImages()
+        #self.verifyimages()
         
         #tabs
         tabcontrol = ttk.Notebook(root)

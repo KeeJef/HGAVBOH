@@ -9,6 +9,7 @@ from tkinter import ttk
 from types import SimpleNamespace as Namespace
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import hashlib
+import io
 import time
 import random
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -118,7 +119,7 @@ class PaintApp:
         
         #Add cryptokeys here 
 
-        concatValue = public_key +'||'+ timestamp +'||'+ nonce +'||'+ imagehash +'||'+ blockhash
+        concatValue = public_key +'||'+ timestamp +'||'+ nonce +'||'+ imagehash +'||'+ blockhash + '||'
         singedConcat = self.signHashes(concatValue)
         self.exitImageExif(singedConcat)
         
@@ -127,7 +128,7 @@ class PaintApp:
     def exitImageExif(self, singedInfo):
 
         singedInfoString = str(singedInfo[0])
-        singedInfoString += "!!!!!!" + str(singedInfo[1]) # Something happens here which fucks with my Public key formatting
+        singedInfoString += "!!!!!!" + str(singedInfo[1]) # Something happens here which fucks with my Public key formattingpyth
         
         exif_ifd = {piexif.ExifIFD.CameraOwnerName: singedInfoString}
         exif_dict = {"Exif":exif_ifd}
@@ -172,26 +173,46 @@ class PaintApp:
             pass
     
     def verifyimages(self):
-        counter = 1 
+        counter = 5 
 
         while len(self.loadedimages) != counter:
 
             exifdata = self.dumpRelevantExit((BytesIO(self.loadedimages[counter].content)))
+            bytesexifdata = self.dumpExifDataBytes((BytesIO(self.loadedimages[counter].content)))
             signatures = exifdata[0]
             signaturessplit = signatures.split("!!!!!!")
-            bytestring = signaturessplit[1]
-            bytestring= bytestring[2:]
-            bytestring = bytes(bytestring, encoding= 'utf-8')
+            
+            signaturekey = signaturessplit[1]
+            signaturekey= signaturekey[2:]
+            signaturekey = bytes(signaturekey, encoding= 'utf-8')
+            signaturekey = signaturekey.decode('unicode-escape').encode('ISO-8859-1')
+
+            signatureraw = signaturessplit[0]
+            signatureraw= signatureraw[2:][:-1]
+            signatureraw = bytes(signatureraw, encoding= 'utf-8')
+            signatureraw = signatureraw.decode('unicode-escape').encode('ISO-8859-1')
+
+            publickey = serialization.load_pem_public_key(signaturekey, backend=default_backend())
+            publickey.verify(signatureraw,bytesexifdata)
+            # Right now just verify the image hash, other values will be relevant later
+
+            exifimagehash = exifdata[3]
+
+            #image = Image.open(self.nonce +".jpeg").tobytes()
+            
+            testimagehash = Image.open(BytesIO(self.loadedimages[counter].content))
+            testimagehash = testimagehash.fp.getvalue()
+            
+            clearedexif = io.BytesIO()
+            piexif.remove(testimagehash, clearedexif)
+
+            testsomething = Image.open(clearedexif).tobytes()
+
+            clearedexif = clearedexif.getvalue()
 
 
-            publickey = serialization.load_pem_public_key(bytestring, backend=default_backend())
-            publickey.verify(signaturesplit[0], exifdata)
+            actualimagehash =  self.loadedimages[counter].content 
 
-
-            timestamp = exifdata[1]
-            nonce = exifdata[2]
-            imagehash = exifdata[3]
-            blockhash = exifdata[4]
 
 
 
@@ -229,6 +250,18 @@ class PaintApp:
         sectionedExif[4] = sectionedExif[4][:-1]
         return sectionedExif
 
+    def dumpExifDataBytes(self, im):
+        im = Image.open(im)
+        exif_dict = piexif.load(im.info["exif"])
+        exifdata = exif_dict['Exif'][42032]
+        exifdata = exifdata.decode('utf-8')
+        exifdata = str(exifdata)
+        sectionedExif = exifdata.split("!!!!!!")
+        sectionedExif[1] = sectionedExif[1][2:][:-1]
+        sectionedExif[1] = bytes(sectionedExif[1], encoding= 'utf-8')
+        sectionedExif[1] = sectionedExif[1].decode('unicode-escape').encode('ISO-8859-1')
+
+        return sectionedExif[1]
 
     def clear(self, drawing_area):
         drawing_area.delete('all')
@@ -313,7 +346,7 @@ class PaintApp:
 
         #Pre fetch images for verification
         self.fetchImages()
-        #self.verifyimages()
+        self.verifyimages()
         
         #tabs
         tabcontrol = ttk.Notebook(root)

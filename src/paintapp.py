@@ -151,26 +151,16 @@ class PaintApp:
 
     def uploadfile(self,dataJSON):
 
-        headers = {'Content-Type': 'application/json',}
-        data = '{ "userName": "master", "password": "secret" }'
-        response = requests.post('http://163.172.168.41:8888/services/auth/login', headers=headers, data=data)
-        cookies = response.cookies
-        
-
+        cookies = self.login()
         dataJSON = json.dumps(dataJSON)
         dataJSON = dataJSON.encode('utf-8')
         files = {'file': (dataJSON),}
         response = requests.post('http://163.172.168.41:8888/services/files/upload/newdir/'+ self.nonce + '.json', cookies=cookies, files=files)
         
-    def fetchImages(self):
+    def getImageList(self):
         counter = 0
         imageFileNameList = []
-        self.loadedimages = []
-
-        headers = {'Content-Type': 'application/json',}
-        data = '{ "userName": "master", "password": "secret" }'
-        response = requests.post('http://163.172.168.41:8888/services/auth/login', headers=headers, data=data)
-        cookies = response.cookies
+        cookies = self.login()
         response = requests.get('http://163.172.168.41:8888/services/files/list/newdir', cookies=cookies)
         jsonresponse  = json.loads(response.text)
         jsonresponse = jsonresponse['fileInfo']
@@ -180,12 +170,25 @@ class PaintApp:
             counter += 1
             pass
         self.imageFileNameList = imageFileNameList
+
+    def fetchImages(self):
+        self.loadedimages = []
+
+        imageFileNameList = self.imageFileNameList
         counter = 0
+        cookies = self.login()
         while len(imageFileNameList) != counter:
             self.loadedimages.append(requests.get('http://163.172.168.41:8888/services/files/download/newdir/' + imageFileNameList[counter], cookies=cookies))
 
             counter += 1
             pass
+
+    def login(self):
+        headers = {'Content-Type': 'application/json',}
+        data = '{ "userName": "master", "password": "secret" }'
+        response = requests.post('http://163.172.168.41:8888/services/auth/login', headers=headers, data=data)
+        cookies = response.cookies
+        return cookies
     
     def verifyimages(self):
         counter = 0 
@@ -362,11 +365,22 @@ class PaintApp:
 
         return signeddata
 
-    def updateImgMetaTags(self):
-        print("")
+    def refreshlist(self, mylistbox):
+        counter = 0
+
+        self.getImageList()
+        mylistbox.Items.Clear()
+        while counter != len(self.imageFileNameList):
+            mylistbox.insert(counter,self.imageFileNameList[counter])
+            counter += 1
+            pass
+        
+        return
 
 
     def __init__(self, root):
+
+        root.geometry("1250x650")
 
         #Set default finished value to false
         self.finishedgate = False
@@ -375,6 +389,7 @@ class PaintApp:
         self.generateOrLoadKeypair()
 
         #Pre fetch images for verification
+        self.getImageList()
         self.fetchImages()
         self.verifyimages()
         
@@ -466,8 +481,11 @@ class PaintApp:
 
         
      # Add list box for verification
+
+        listboxframe= Frame(tab2,bd=1,relief = RAISED)
+
         counter = 0
-        listbox = Listbox(tab2)
+        listbox = Listbox(listboxframe)
         while counter != len(self.imageFileNameList):
             listbox.insert(counter,self.imageFileNameList[counter])
             counter += 1
@@ -476,9 +494,16 @@ class PaintApp:
         listbox.select_set(0)
         listbox.event_generate("<<ListboxSelect>>")
 
-        listbox.pack(side =LEFT)
+        refresh_img = Image.open("refresh.png")
+        refresh_icon = ImageTk.PhotoImage(refresh_img)
+        refresh_button = Button(listboxframe, image=refresh_icon, command =lambda: self.refreshlist(listbox))
+        refresh_button.image = refresh_icon
+        refresh_button.pack (side=tkinter.BOTTOM, padx=2, pady=2)
 
-        #buttons for verifciation panel 
+        listbox.pack(listbox)
+        listboxframe.pack(side = LEFT)
+
+        #buttons for verification panel 
 
         bottomframe= Frame(tab2,bd=1,relief = RAISED)
 

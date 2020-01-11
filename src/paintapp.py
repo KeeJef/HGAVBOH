@@ -8,6 +8,7 @@ import base64
 import zlib
 from io import BytesIO
 from tkinter import ttk
+from tkinter import messagebox
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import hashlib
 import io
@@ -33,7 +34,7 @@ class PaintApp:
 
     #hardcoded blockhash for now will change when blockchain is added
     blockhash = '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824' 
-    
+
     # ---------- CATCH MOUSE UP ----------
 
     def left_but_down(self, event=None):
@@ -99,6 +100,7 @@ class PaintApp:
         textarea.delete('1.0', END)
         textarea.insert(tkinter.END, self.randomWords(),'center-big')
         textarea.config(state=DISABLED)
+        self.finishedgate = False
 
     def save(self, drawing_area):
         x=self.tab1.winfo_rootx()+drawing_area.winfo_x()
@@ -246,6 +248,7 @@ class PaintApp:
 
     def clear(self, drawing_area):
         drawing_area.delete('all')
+        self.finishedgate = False
 
     def getWordsFromNonceHash(self, nonce, hashobj):
         factornonce = nonce + hashobj
@@ -266,6 +269,28 @@ class PaintApp:
     def choose_color(self):
         self.eraser_on = False
         self.color = askcolor()[1]
+
+    def humanmade(self):
+        
+        if self.finishedgate == False:
+            messagebox.showinfo("Unordered Action","You need to finalize your drawing before you can vote")
+            return
+
+        print("hello")
+
+    def nothumanmade(self):
+
+        if self.finishedgate == False:
+            messagebox.showinfo("Unordered Action","You need to finalize your drawing before you can vote")
+            return
+
+        print("hello")
+
+    def isFinished(self):
+
+        self.finishedgate = True
+
+        return
 
     def generateOrLoadKeypair(self):
 
@@ -322,6 +347,9 @@ class PaintApp:
 
     def __init__(self, root):
 
+        #Set default finished value to false
+        self.finishedgate = False
+
         #GenerateKeys
         self.generateOrLoadKeypair()
 
@@ -330,11 +358,22 @@ class PaintApp:
         self.verifyimages()
         
         #tabs
+
+        style = ttk.Style()
+
+        style.theme_create( "MyStyle", parent="alt", settings={
+        "TNotebook": {"configure": {"tabmargins": [2, 5, 2, 0] } },
+        "TNotebook.Tab": {"configure": {"padding": [17, 17] },}})
+
+        style.theme_use("MyStyle")
+
+        
+
         tabcontrol = ttk.Notebook(root)
         self.tab1 = ttk.Frame(tabcontrol)
-        tabcontrol.add(self.tab1, text="Create")
+        tabcontrol.add(self.tab1, text="Step 1")
         tab2 = ttk.Frame(tabcontrol)
-        tabcontrol.add(tab2, text="Verify")
+        tabcontrol.add(tab2, text="Step 2")
         tabcontrol.pack(expan = 1,fill = "both")
 
         # Add buttons for Finishing getting new word combos and clearing the canvas
@@ -345,16 +384,20 @@ class PaintApp:
         newwords_img = Image.open("newwords.png")
         clearcanvas_img = Image.open("clearcanvas.png")
         selectcolour_img = Image.open("selectcolour.png")
+        finished_img = Image.open("finished.png")
 
         save_icon = ImageTk.PhotoImage(save_img)
         newwords_icon = ImageTk.PhotoImage(newwords_img)
         clearcanvas_icon = ImageTk.PhotoImage(clearcanvas_img)
         selectcolour_icon = ImageTk.PhotoImage(selectcolour_img)
+        finished_icon = ImageTk.PhotoImage(finished_img)
 
         save_button = Button(toolbar, image=save_icon, command= lambda: self.save(drawing_area))
         newwords_button = Button(toolbar, image=newwords_icon, command =lambda: self.getNewWords(textarea))
         clearcanvas_button = Button(toolbar, image=clearcanvas_icon, command = lambda: self.clear(drawing_area))
         selectcolour_button = Button(toolbar, image=selectcolour_icon, command= self.choose_color)
+        finished_button = Button(toolbar, image=finished_icon, command= self.isFinished())
+
         self.choose_size_button = Scale(toolbar, from_=1, to=10, orient=HORIZONTAL)
 
         
@@ -362,11 +405,14 @@ class PaintApp:
         newwords_button.image = newwords_icon
         clearcanvas_button.image = clearcanvas_icon
         selectcolour_button.image = selectcolour_icon
+        finished_button.image = finished_icon
 
         save_button.pack (side = LEFT, padx=2, pady=2)
         newwords_button.pack (side = LEFT, padx=2, pady=2)
         clearcanvas_button.pack (side = LEFT, padx=2, pady=2)
         selectcolour_button.pack (side = LEFT, padx=2, pady=2)
+        finished_button.pack(side = LEFT,padx=2, pady=2)
+
         self.choose_size_button.pack (side = LEFT, padx=2, pady=2)
         self.choose_size_button.set(5)
 
@@ -418,13 +464,13 @@ class PaintApp:
 
         tick_img = Image.open("tick.png")
         tick_icon = ImageTk.PhotoImage(tick_img)
-        tick_button = Button(bottomframe, image=tick_icon)
+        tick_button = Button(bottomframe, image=tick_icon, command =lambda: self.humanmade())
         tick_button.image = tick_icon
         tick_button.pack (side=tkinter.LEFT, anchor=tkinter.CENTER, padx=2, pady=2)
 
         cross_img = Image.open("cross.png")
         cross_icon = ImageTk.PhotoImage(cross_img)
-        cross_button = Button(bottomframe, image=cross_icon)
+        cross_button = Button(bottomframe, image=cross_icon, command =lambda: self.nothumanmade())
         cross_button.image = cross_icon
         cross_button.pack (side = tkinter.RIGHT ,anchor=tkinter.CENTER, padx=2, pady=2)
 

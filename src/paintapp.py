@@ -108,9 +108,9 @@ class PaintApp:
         x1=x+drawing_area.winfo_width()
         y1=y+drawing_area.winfo_height()
         ImageGrab.grab().crop((x,y,x1,y1)).save(self.nonce+".jpeg")
-        self.submitToNetwork()
+        self.getImageReady()
 
-    def submitToNetwork(self):
+    def getImageReady(self):
 
         imageJSON = {}
 
@@ -144,7 +144,10 @@ class PaintApp:
         imageJSON['singature'] = signature.decode('utf-8')
         imageJSON['imageRawBytes'] = image.decode('utf-8')
 
-        self.uploadfile(imageJSON)
+        self.finishedgate = True
+        self.readyToGo = imageJSON
+
+        #self.uploadfile(imageJSON)
 
     def uploadfile(self,dataJSON):
 
@@ -277,6 +280,9 @@ class PaintApp:
             return
 
         print("hello")
+        commit = self.commit(True)
+        self.readyToGo['commit'] = commit
+        self.uploadfile(self.readyToGo)
 
     def nothumanmade(self):
 
@@ -284,7 +290,22 @@ class PaintApp:
             messagebox.showinfo("Unordered Action","You need to finalize your drawing before you can vote")
             return
 
-        print("hello")
+        commit = self.commit(False)
+        self.readyToGo['commit'] = commit
+        self.uploadfile(self.readyToGo)
+
+    def commit (self, descion):
+
+        commitNonce = str(random.getrandbits(64))
+        commitTimestamp = str(int(time.time()))
+        descion = str(descion)
+        commit = commitNonce + '||' + commitTimestamp +'||'+ descion
+        self.revealdata = commit
+        commit = commit.encode('utf-8')
+        commit = hashlib.blake2b(commit).hexdigest()
+
+        return commit
+
 
     def isFinished(self):
 
@@ -384,19 +405,19 @@ class PaintApp:
         newwords_img = Image.open("newwords.png")
         clearcanvas_img = Image.open("clearcanvas.png")
         selectcolour_img = Image.open("selectcolour.png")
-        finished_img = Image.open("finished.png")
+        
 
         save_icon = ImageTk.PhotoImage(save_img)
         newwords_icon = ImageTk.PhotoImage(newwords_img)
         clearcanvas_icon = ImageTk.PhotoImage(clearcanvas_img)
         selectcolour_icon = ImageTk.PhotoImage(selectcolour_img)
-        finished_icon = ImageTk.PhotoImage(finished_img)
+        
 
         save_button = Button(toolbar, image=save_icon, command= lambda: self.save(drawing_area))
         newwords_button = Button(toolbar, image=newwords_icon, command =lambda: self.getNewWords(textarea))
         clearcanvas_button = Button(toolbar, image=clearcanvas_icon, command = lambda: self.clear(drawing_area))
         selectcolour_button = Button(toolbar, image=selectcolour_icon, command= self.choose_color)
-        finished_button = Button(toolbar, image=finished_icon, command= self.isFinished())
+        
 
         self.choose_size_button = Scale(toolbar, from_=1, to=10, orient=HORIZONTAL)
 
@@ -405,13 +426,12 @@ class PaintApp:
         newwords_button.image = newwords_icon
         clearcanvas_button.image = clearcanvas_icon
         selectcolour_button.image = selectcolour_icon
-        finished_button.image = finished_icon
-
+        
         save_button.pack (side = LEFT, padx=2, pady=2)
         newwords_button.pack (side = LEFT, padx=2, pady=2)
         clearcanvas_button.pack (side = LEFT, padx=2, pady=2)
         selectcolour_button.pack (side = LEFT, padx=2, pady=2)
-        finished_button.pack(side = LEFT,padx=2, pady=2)
+        
 
         self.choose_size_button.pack (side = LEFT, padx=2, pady=2)
         self.choose_size_button.set(5)

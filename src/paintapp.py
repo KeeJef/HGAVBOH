@@ -4,9 +4,10 @@ import tkinter.font
 import webcolors
 import requests
 import json
+import base64
+import zlib
 from io import BytesIO
 from tkinter import ttk
-from types import SimpleNamespace as Namespace
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import hashlib
 import io
@@ -16,11 +17,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
-import piexif
 import os.path
 from os import path
-
-blockhash = '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824' #hardcoded for now 
 
 class PaintApp:
 
@@ -33,6 +31,8 @@ class PaintApp:
     # x and y positions for drawing with pencil
     x_pos, y_pos = None, None
 
+    #hardcoded blockhash for now will change when blockchain is added
+    blockhash = '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824' 
     
     # ---------- CATCH MOUSE UP ----------
 
@@ -59,7 +59,7 @@ class PaintApp:
     def randomWords(self, event=None):
 
         self.nonce =  str(random.randint(0, 100000000))
-        factornonce = self.nonce + blockhash
+        factornonce = self.nonce + self.blockhash
         factornonce = factornonce.encode('utf-8')
         hashseed = hashlib.blake2b(factornonce)
         hashseed = hashseed.hexdigest()
@@ -109,44 +109,54 @@ class PaintApp:
         self.submitToNetwork()
 
     def submitToNetwork(self):
+
+        imageJSON = {}
+
         public_key = self.private_key.public_key()
         public_key= public_key.public_bytes(encoding=serialization.Encoding.PEM,format=serialization.PublicFormat.SubjectPublicKeyInfo)
         public_key= public_key.decode('utf-8')
-        image = Image.open(self.nonce +".jpeg").tobytes()
-        imagehash =  hashlib.blake2b(image).hexdigest()
-        timestamp = str(int(time.time()))
-        nonce = self.nonce
+
+        #image = Image.open(self.nonce +".jpeg" , "rb") #make this a Json field in json
+
+        with open(self.nonce +".jpeg", "rb") as image:
+            image = base64.b64encode(image.read())
+
+        imagehash =  hashlib.blake2b(image).hexdigest()       
         
         #Add cryptokeys here 
 
-        concatValue = public_key +'||'+ timestamp +'||'+ nonce +'||'+ imagehash +'||'+ blockhash + '||'
-        singedConcat = self.signHashes(concatValue)
-        self.exitImageExif(singedConcat)
+        imageJSON['public_key'] = public_key
+        imageJSON['nonce'] = self.nonce
+        imageJSON['timestamp'] = int(time.time())
+        imageJSON['blockHash'] = self.blockhash
+        imageJSON['imageHash'] = imagehash
+
+        readyToSignString = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['nonce'] +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash'] #Get all values into string for singing
+        signature = self.signHashes(readyToSignString)
+
+        image = zlib.compress(image) #compress image 
+
+        signature = base64.encodebytes(signature)
+        image = base64.encodebytes(image)
         
-        
+        imageJSON['singature'] = signature.decode('utf-8')
+        imageJSON['imageRawBytes'] = image.decode('utf-8')
 
-    def exitImageExif(self, singedInfo):
+        self.uploadfile(imageJSON)
 
-        singedInfoString = str(singedInfo[0])
-        singedInfoString += "!!!!!!" + str(singedInfo[1]) # Something happens here which fucks with my Public key formattingpyth
-        
-        exif_ifd = {piexif.ExifIFD.CameraOwnerName: singedInfoString}
-        exif_dict = {"Exif":exif_ifd}
-
-        exif_bytes = piexif.dump(exif_dict)
-        piexif.insert(exif_bytes,self.nonce + ".jpeg")
-
-        self.uploadfile()
-
-    def uploadfile(self):
+    def uploadfile(self,dataJSON):
 
         headers = {'Content-Type': 'application/json',}
         data = '{ "userName": "master", "password": "secret" }'
         response = requests.post('http://163.172.168.41:8888/services/auth/login', headers=headers, data=data)
         cookies = response.cookies
-        files = {'file': (self.nonce+'.jpeg', open( self.nonce +'.jpeg', 'rb')),}
-        response = requests.post('http://163.172.168.41:8888/services/files/upload/newdir/'+ self.nonce + '.jpeg', cookies=cookies, files=files)
+        
 
+        dataJSON = json.dumps(dataJSON)
+        dataJSON = dataJSON.encode('utf-8')
+        files = {'file': (dataJSON),}
+        response = requests.post('http://163.172.168.41:8888/services/files/upload/newdir/'+ self.nonce + '.json', cookies=cookies, files=files)
+        
     def fetchImages(self):
         counter = 0
         imageFileNameList = []
@@ -173,49 +183,34 @@ class PaintApp:
             pass
     
     def verifyimages(self):
-        counter = 5 
-
+        counter = 0 
         while len(self.loadedimages) != counter:
 
-            exifdata = self.dumpRelevantExit((BytesIO(self.loadedimages[counter].content)))
-            bytesexifdata = self.dumpExifDataBytes((BytesIO(self.loadedimages[counter].content)))
-            signatures = exifdata[0]
-            signaturessplit = signatures.split("!!!!!!")
+            imageJSON = self.loadedimages[counter].content.decode('utf-8')
+            imageJSON = json.loads(imageJSON)
+
+            imageJSON['singature'] = imageJSON['singature'].encode('utf-8')
+            imageJSON['singature'] = base64.decodebytes(imageJSON['singature'])
             
-            signaturekey = signaturessplit[1]
-            signaturekey= signaturekey[2:]
-            signaturekey = bytes(signaturekey, encoding= 'utf-8')
-            signaturekey = signaturekey.decode('unicode-escape').encode('ISO-8859-1')
-
-            signatureraw = signaturessplit[0]
-            signatureraw= signatureraw[2:][:-1]
-            signatureraw = bytes(signatureraw, encoding= 'utf-8')
-            signatureraw = signatureraw.decode('unicode-escape').encode('ISO-8859-1')
-
-            publickey = serialization.load_pem_public_key(signaturekey, backend=default_backend())
-            publickey.verify(signatureraw,bytesexifdata)
-            # Right now just verify the image hash, other values will be relevant later
-
-            exifimagehash = exifdata[3]
-
-            #image = Image.open(self.nonce +".jpeg").tobytes()
+            singeddata = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['nonce'] +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash']
+            singeddata = str.encode(singeddata)
             
-            testimagehash = Image.open(BytesIO(self.loadedimages[counter].content))
-            testimagehash = testimagehash.fp.getvalue()
+            #verify the header data is singed by the contained key 
+            publickey = serialization.load_pem_public_key(str.encode(imageJSON['public_key']), backend=default_backend())
+            publickey.verify(imageJSON['singature'],singeddata)
+
+            imageJSON['imageRawBytes'] = imageJSON['imageRawBytes'].encode('utf-8')
+            imageJSON['imageRawBytes'] = base64.decodebytes(imageJSON['imageRawBytes'])
+            imageJSON['imageRawBytes'] = zlib.decompress(imageJSON['imageRawBytes'])
             
-            clearedexif = io.BytesIO()
-            piexif.remove(testimagehash, clearedexif)
 
-            testsomething = Image.open(clearedexif).tobytes()
+            verifyimagehash =  hashlib.blake2b(imageJSON['imageRawBytes']).hexdigest()
 
-            clearedexif = clearedexif.getvalue()
-
-
-            actualimagehash =  self.loadedimages[counter].content 
-
-
-
-
+            #remove elements where loaded image does not match the image hash
+            if verifyimagehash != imageJSON['imageHash']:
+                self.loadedimages.remove(counter)
+                counter += 1
+                continue
 
             counter += 1 
             pass
@@ -225,11 +220,20 @@ class PaintApp:
         w = evt.widget
         index = int(w.curselection()[0])
         value = w.get(index)
-        self.img = ImageTk.PhotoImage(Image.open(BytesIO(self.loadedimages[index].content)))
+
+        imageJSON = self.loadedimages[index].content.decode('utf-8')
+        imageJSON = json.loads(imageJSON)
+
+        imageJSON['imageRawBytes'] = imageJSON['imageRawBytes'].encode('utf-8')
+        imageJSON['imageRawBytes'] = base64.decodebytes(imageJSON['imageRawBytes'])
+        imageJSON['imageRawBytes'] = zlib.decompress(imageJSON['imageRawBytes'])
+        
+        bytesImage = io.BytesIO(base64.b64decode(imageJSON['imageRawBytes']))
+
+        self.img = ImageTk.PhotoImage(Image.open(bytesImage))
         self.viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
 
-        exifdata = self.dumpRelevantExit((BytesIO(self.loadedimages[index].content)))
-        derivedwords = self.getWordsFromNonceHash(exifdata[2],exifdata[4])
+        derivedwords = self.getWordsFromNonceHash(imageJSON['nonce'],imageJSON['blockHash'])
        
         self.verifytextarea.config(state=NORMAL)
         self.verifytextarea.delete('1.0', END)
@@ -239,29 +243,6 @@ class PaintApp:
         # print ('You selected item %d: "%s"' % (index, value))
         return
 
-    def dumpRelevantExit(self, im):
-
-        im = Image.open(im)
-        exif_dict = piexif.load(im.info["exif"])
-        exifdata = exif_dict['Exif'][42032]
-        exifdata = exifdata.decode('utf-8')
-        exifdata = str(exifdata)
-        sectionedExif = exifdata.split("||")
-        sectionedExif[4] = sectionedExif[4][:-1]
-        return sectionedExif
-
-    def dumpExifDataBytes(self, im):
-        im = Image.open(im)
-        exif_dict = piexif.load(im.info["exif"])
-        exifdata = exif_dict['Exif'][42032]
-        exifdata = exifdata.decode('utf-8')
-        exifdata = str(exifdata)
-        sectionedExif = exifdata.split("!!!!!!")
-        sectionedExif[1] = sectionedExif[1][2:][:-1]
-        sectionedExif[1] = bytes(sectionedExif[1], encoding= 'utf-8')
-        sectionedExif[1] = sectionedExif[1].decode('unicode-escape').encode('ISO-8859-1')
-
-        return sectionedExif[1]
 
     def clear(self, drawing_area):
         drawing_area.delete('all')
@@ -331,7 +312,7 @@ class PaintApp:
         public_key = self.private_key.public_key()      
         public_key.verify(signature, dataToSign)
 
-        signeddata = [signature, dataToSign]
+        signeddata = signature
 
         return signeddata
 

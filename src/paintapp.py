@@ -282,7 +282,6 @@ class PaintApp:
             messagebox.showinfo("Unordered Action","You need to finalize your drawing before you can vote")
             return
 
-        print("hello")
         commit = self.commit(True)
         self.readyToGo['commit'] = commit
         self.uploadfile(self.readyToGo)
@@ -299,6 +298,8 @@ class PaintApp:
 
     def commit (self, descion):
 
+        #Commit stage of commit reveal voting, save reveal info in revealdata for a later point
+
         commitNonce = str(random.getrandbits(64))
         commitTimestamp = str(int(time.time()))
         descion = str(descion)
@@ -308,13 +309,6 @@ class PaintApp:
         commit = hashlib.blake2b(commit).hexdigest()
 
         return commit
-
-
-    def isFinished(self):
-
-        self.finishedgate = True
-
-        return
 
     def generateOrLoadKeypair(self):
 
@@ -367,9 +361,16 @@ class PaintApp:
 
     def refreshlist(self, mylistbox):
         counter = 0
-
+        #compare current image list with newly fetched image list, if difference download all images again
+        formerImagelist = []
+        formerImagelist = self.imageFileNameList
         self.getImageList()
-        mylistbox.Items.Clear()
+
+        if formerImagelist != self.imageFileNameList:
+            self.fetchImages() # need to create a fuction that only requests the difference between the two lists and appends the new images, this downloads all imgs again
+            pass
+
+        mylistbox.delete(0,'end')
         while counter != len(self.imageFileNameList):
             mylistbox.insert(counter,self.imageFileNameList[counter])
             counter += 1
@@ -500,7 +501,7 @@ class PaintApp:
         refresh_button.image = refresh_icon
         refresh_button.pack (side=tkinter.BOTTOM, padx=2, pady=2)
 
-        listbox.pack(listbox)
+        listbox.pack()
         listboxframe.pack(side = LEFT)
 
         #buttons for verification panel 

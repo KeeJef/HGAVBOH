@@ -6,3 +6,5 @@ src/privkey.txt
 src/pubkey.txt
 
 *.jpeg
+
+src/__pycache__/

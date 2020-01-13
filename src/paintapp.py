@@ -155,7 +155,7 @@ class PaintApp:
         dataJSON = json.dumps(dataJSON)
         dataJSON = dataJSON.encode('utf-8')
         files = {'file': (dataJSON),}
-        response = requests.post('http://163.172.168.41:8888/services/files/upload/newdir/'+ self.nonce + '.json', cookies=cookies, files=files)
+        requests.post('http://163.172.168.41:8888/services/files/upload/newdir/'+ self.nonce + '.json', cookies=cookies, files=files)
         
     def getImageList(self):
         counter = 0
@@ -227,7 +227,6 @@ class PaintApp:
         # Note here that Tkinter passes an event object to onselect()
         w = evt.widget
         index = int(w.curselection()[0])
-        value = w.get(index)
 
         imageJSON = self.loadedimages[index].content.decode('utf-8')
         imageJSON = json.loads(imageJSON)

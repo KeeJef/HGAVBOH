@@ -4,14 +4,15 @@ from cryptography.hazmat.primitives import serialization
 import hashlib
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import time 
+import os
 import cryptostuff
 
-def save(selfobj, drawing_area):
+def saveImg(selfobj, drawing_area):
     x=selfobj.tab1.winfo_rootx()+drawing_area.winfo_x()
     y=selfobj.tab1.winfo_rooty()+drawing_area.winfo_y()
     x1=x+drawing_area.winfo_width()
     y1=y+drawing_area.winfo_height()
-    ImageGrab.grab().crop((x,y,x1,y1)).save(selfobj.nonce+".jpeg")
+    ImageGrab.grab().crop((x,y,x1,y1)).save('../savedimages/' + selfobj.nonce+".jpeg")
     getImageReady(selfobj)
 
 def getImageReady(selfobj):
@@ -24,7 +25,7 @@ def getImageReady(selfobj):
 
     #image = Image.open(selfobj.nonce +".jpeg" , "rb") #make this a Json field in json
 
-    with open(selfobj.nonce +".jpeg", "rb") as image:
+    with open('../savedimages/' + selfobj.nonce +".jpeg", "rb") as image:
         image = base64.b64encode(image.read())
 
     imagehash =  hashlib.blake2b(image).hexdigest()       

@@ -1,29 +1,18 @@
 from tkinter import *
 from tkinter.colorchooser import askcolor
 import tkinter.font
-import webcolors
-import requests
 import json
 import base64
 import zlib
 from io import BytesIO
 from tkinter import ttk
 from tkinter import messagebox
-from PIL import Image, ImageTk, ImageDraw, ImageGrab
-import hashlib
+from PIL import Image, ImageTk
 import io
 import words
 import imagemanipulate
 import cryptostuff
 import postsandgets
-import time
-import random
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from cryptography.hazmat.primitives.asymmetric import ed25519
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.backends import default_backend
-import os.path
-from os import path
 
 class PaintApp:
 
@@ -80,68 +69,9 @@ class PaintApp:
 
             self.x_pos = event.x
             self.y_pos = event.y   
-        
-    def getImageList(self):
-        counter = 0
-        imageFileNameList = []
-        cookies = self.login()
-        response = requests.get('http://163.172.168.41:8888/services/files/list/newdir', cookies=cookies)
-        jsonresponse  = json.loads(response.text)
-        jsonresponse = jsonresponse['fileInfo']
 
-        while len(jsonresponse)!= counter:
-            imageFileNameList.append(jsonresponse[counter]['filePath'])
-            counter += 1
-            pass
-        self.imageFileNameList = imageFileNameList
-
-    def fetchImages(self):
-        self.loadedimages = []
-
-        imageFileNameList = self.imageFileNameList
-        counter = 0
-        cookies = self.login()
-        while len(imageFileNameList) != counter:
-            self.loadedimages.append(requests.get('http://163.172.168.41:8888/services/files/download/newdir/' + imageFileNameList[counter], cookies=cookies))
-
-            counter += 1
-            pass
-    
-    def verifyimages(self):
-        counter = 0 
-        while len(self.loadedimages) != counter:
-
-            imageJSON = self.loadedimages[counter].content.decode('utf-8')
-            imageJSON = json.loads(imageJSON)
-
-            imageJSON['singature'] = imageJSON['singature'].encode('utf-8')
-            imageJSON['singature'] = base64.decodebytes(imageJSON['singature'])
-            
-            singeddata = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['nonce'] +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash']
-            singeddata = str.encode(singeddata)
-            
-            #verify the header data is singed by the contained key 
-            publickey = serialization.load_pem_public_key(str.encode(imageJSON['public_key']), backend=default_backend())
-            publickey.verify(imageJSON['singature'],singeddata)
-
-            imageJSON['imageRawBytes'] = imageJSON['imageRawBytes'].encode('utf-8')
-            imageJSON['imageRawBytes'] = base64.decodebytes(imageJSON['imageRawBytes'])
-            imageJSON['imageRawBytes'] = zlib.decompress(imageJSON['imageRawBytes'])
-            
-
-            verifyimagehash =  hashlib.blake2b(imageJSON['imageRawBytes']).hexdigest()
-
-            #remove elements where loaded image does not match the image hash
-            if verifyimagehash != imageJSON['imageHash']:
-                self.loadedimages.remove(counter)
-                counter += 1
-                continue
-
-            counter += 1 
-            pass
-
-    def onselect(self,evt):
-        # Note here that Tkinter passes an event object to onselect()
+    def on(self,evt):
+        # Note here that Tkinter passes an event object to on()
         w = evt.widget
         index = int(w.curselection()[0])
 
@@ -183,7 +113,7 @@ class PaintApp:
             messagebox.showinfo("Unordered Action","You need to finalize your drawing before you can vote")
             return
 
-        commit = self.commit(True)
+        commit = cryptostuff.commit(self, True)
         self.readyToGo['commit'] = commit
         postsandgets.uploadfile(self.nonce, self.readyToGo)
 
@@ -193,42 +123,9 @@ class PaintApp:
             messagebox.showinfo("Unordered Action","You need to finalize your drawing before you can vote")
             return
 
-        commit = self.commit(False)
+        commit = cryptostuff.commit(self,False)
         self.readyToGo['commit'] = commit
         postsandgets.uploadfile(self.nonce, self.readyToGo)
-
-    def commit (self, descion):
-
-        #Commit stage of commit reveal voting, save reveal info in revealdata for a later point
-
-        commitNonce = str(random.getrandbits(64))
-        commitTimestamp = str(int(time.time()))
-        descion = str(descion)
-        commit = commitNonce + '||' + commitTimestamp +'||'+ descion
-        self.revealdata = commit
-        commit = commit.encode('utf-8')
-        commit = hashlib.blake2b(commit).hexdigest()
-
-        return commit
-
-    def refreshlist(self, mylistbox):
-        counter = 0
-        #compare current image list with newly fetched image list, if difference download all images again
-        formerImagelist = []
-        formerImagelist = self.imageFileNameList
-        self.getImageList()
-
-        if formerImagelist != self.imageFileNameList:
-            self.fetchImages() # need to create a fuction that only requests the difference between the two lists and appends the new images, this downloads all imgs again
-            pass
-
-        mylistbox.delete(0,'end')
-        while counter != len(self.imageFileNameList):
-            mylistbox.insert(counter,self.imageFileNameList[counter])
-            counter += 1
-            pass
-        
-        return
 
 
     def __init__(self, root):
@@ -242,9 +139,9 @@ class PaintApp:
         cryptostuff.generateOrLoadKeypair(self)
 
         #Pre fetch images for verification
-        self.getImageList()
-        self.fetchImages()
-        self.verifyimages()
+        postsandgets.getImageList(self)
+        postsandgets.fetchImages(self)
+        cryptostuff.verifyimages(self)
         
         #tabs
 
@@ -269,10 +166,10 @@ class PaintApp:
 
         toolbar = Frame(self.tab1,bd=1,relief = RAISED)
 
-        save_img = Image.open("save.png")
-        newwords_img = Image.open("newwords.png")
-        clearcanvas_img = Image.open("clearcanvas.png")
-        selectcolour_img = Image.open("selectcolour.png")
+        save_img = Image.open("../assets/save.png")
+        newwords_img = Image.open("../assets/newwords.png")
+        clearcanvas_img = Image.open("../assets/clearcanvas.png")
+        selectcolour_img = Image.open("../assets/selectcolour.png")
         
 
         save_icon = ImageTk.PhotoImage(save_img)
@@ -281,7 +178,7 @@ class PaintApp:
         selectcolour_icon = ImageTk.PhotoImage(selectcolour_img)
         
 
-        save_button = Button(toolbar, image=save_icon, command= lambda: imagemanipulate.save(self,drawing_area))
+        save_button = Button(toolbar, image=save_icon, command= lambda: imagemanipulate.saveImg(self,drawing_area))
         newwords_button = Button(toolbar, image=newwords_icon, command =lambda: words.getNewWords(self,textarea))
         clearcanvas_button = Button(toolbar, image=clearcanvas_icon, command = lambda: self.clear(drawing_area))
         selectcolour_button = Button(toolbar, image=selectcolour_icon, command= self.choose_color)
@@ -343,13 +240,13 @@ class PaintApp:
             listbox.insert(counter,self.imageFileNameList[counter])
             counter += 1
             pass
-        listbox.bind('<<ListboxSelect>>', self.onselect)
+        listbox.bind('<<ListboxSelect>>', self.on)
         listbox.select_set(0)
         listbox.event_generate("<<ListboxSelect>>")
 
-        refresh_img = Image.open("refresh.png")
+        refresh_img = Image.open("../assets/refresh.png")
         refresh_icon = ImageTk.PhotoImage(refresh_img)
-        refresh_button = Button(listboxframe, image=refresh_icon, command =lambda: self.refreshlist(listbox))
+        refresh_button = Button(listboxframe, image=refresh_icon, command =lambda: postsandgets.refreshlist(self,listbox))
         refresh_button.image = refresh_icon
         refresh_button.pack (side=tkinter.BOTTOM, padx=2, pady=2)
 
@@ -360,13 +257,13 @@ class PaintApp:
 
         bottomframe= Frame(tab2,bd=1,relief = RAISED)
 
-        tick_img = Image.open("tick.png")
+        tick_img = Image.open("../assets/tick.png")
         tick_icon = ImageTk.PhotoImage(tick_img)
         tick_button = Button(bottomframe, image=tick_icon, command =lambda: self.humanmade())
         tick_button.image = tick_icon
         tick_button.pack (side=tkinter.LEFT, anchor=tkinter.CENTER, padx=2, pady=2)
 
-        cross_img = Image.open("cross.png")
+        cross_img = Image.open("../assets/cross.png")
         cross_icon = ImageTk.PhotoImage(cross_img)
         cross_button = Button(bottomframe, image=cross_icon, command =lambda: self.nothumanmade())
         cross_button.image = cross_icon

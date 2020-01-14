@@ -1,4 +1,3 @@
-
 import tkinter as tkint 
 import random
 import hashlib
@@ -13,7 +12,7 @@ def randomWords(selfobj, event=None):
     random.seed(hashseed)
 
     Randomwordarray = []
-    with open('concretenounwordlist.txt') as f:
+    with open('../assets/concretenounwordlist.txt') as f:
         wordlist = f.read().splitlines() 
 
     Randomwordarray = random.sample(wordlist, k=6)
@@ -36,7 +35,7 @@ def getWordsFromNonceHash(nonce, hashobj):
     random.seed(hashseed)
 
     Randomwordarray = []
-    with open('concretenounwordlist.txt') as f:
+    with open('../assets/concretenounwordlist.txt') as f:
         wordlist = f.read().splitlines() 
 
     Randomwordarray = random.sample(wordlist, k=6)

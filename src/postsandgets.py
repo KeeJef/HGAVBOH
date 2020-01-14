@@ -15,3 +15,48 @@ def uploadfile(nonce,dataJSON):
         dataJSON = dataJSON.encode('utf-8')
         files = {'file': (dataJSON),}
         requests.post('http://163.172.168.41:8888/services/files/upload/newdir/'+ nonce + '.json', cookies=cookies, files=files)
+
+def getImageList(selfobj):
+    counter = 0
+    imageFileNameList = []
+    cookies = login()
+    response = requests.get('http://163.172.168.41:8888/services/files/list/newdir', cookies=cookies)
+    jsonresponse  = json.loads(response.text)
+    jsonresponse = jsonresponse['fileInfo']
+
+    while len(jsonresponse)!= counter:
+        imageFileNameList.append(jsonresponse[counter]['filePath'])
+        counter += 1
+        pass
+    selfobj.imageFileNameList = imageFileNameList
+
+def refreshlist(selfobj, mylistbox):
+    counter = 0
+    #compare current image list with newly fetched image list, if difference download all images again
+    formerImagelist = []
+    formerImagelist = selfobj.imageFileNameList
+    getImageList(selfobj)
+
+    if formerImagelist != selfobj.imageFileNameList:
+        fetchImages(selfobj) # need to create a fuction that only requests the difference between the two lists and appends the new images, this downloads all imgs again
+        pass
+
+    mylistbox.delete(0,'end')
+    while counter != len(selfobj.imageFileNameList):
+        mylistbox.insert(counter,selfobj.imageFileNameList[counter])
+        counter += 1
+        pass
+    
+    return
+
+def fetchImages(selfobj):
+    selfobj.loadedimages = []
+
+    imageFileNameList = selfobj.imageFileNameList
+    counter = 0
+    cookies = login()
+    while len(imageFileNameList) != counter:
+        selfobj.loadedimages.append(requests.get('http://163.172.168.41:8888/services/files/download/newdir/' + imageFileNameList[counter], cookies=cookies))
+
+        counter += 1
+        pass

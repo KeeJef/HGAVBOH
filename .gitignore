@@ -8,3 +8,7 @@ src/pubkey.txt
 *.jpeg
 
 src/__pycache__/
+
+keys/privkey.txt
+
+keys/pubkey.txt

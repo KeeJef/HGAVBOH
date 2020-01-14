@@ -1,5 +1,6 @@
 import requests
 import json
+import sqldatabase
 
 def login():
     headers = {'Content-Type': 'application/json',}
@@ -51,6 +52,8 @@ def refreshlist(selfobj, mylistbox):
 
 def fetchImages(selfobj):
     selfobj.loadedimages = []
+    connection = sqldatabase.create_connection("../assets/HGAVBOH.db")
+    sqldatabase.create_table(connection)
 
     imageFileNameList = selfobj.imageFileNameList
     counter = 0

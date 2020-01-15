@@ -17,6 +17,12 @@ def uploadfile(nonce,dataJSON):
         files = {'file': (dataJSON),}
         requests.post('http://163.172.168.41:8888/services/files/upload/newdir/'+ nonce + '.json', cookies=cookies, files=files)
 
+def uploadreveal(selfobj, revealdata):
+
+        cookies = login()
+        files = {'file': (revealdata),}
+        requests.post('http://163.172.168.41:8888/services/files/upload/reveal/'+ selfobj.imagehash + '.txt', cookies=cookies, files=files)
+
 def getImageList(selfobj):
     counter = 0
     imageFileNameList = []
@@ -52,14 +58,13 @@ def refreshlist(selfobj, mylistbox):
 
 def fetchImages(selfobj):
     selfobj.loadedimages = []
-    connection = sqldatabase.create_connection("../assets/HGAVBOH.db")
-    sqldatabase.create_table(connection)
-
     imageFileNameList = selfobj.imageFileNameList
     counter = 0
     cookies = login()
     while len(imageFileNameList) != counter:
-        selfobj.loadedimages.append(requests.get('http://163.172.168.41:8888/services/files/download/newdir/' + imageFileNameList[counter], cookies=cookies))
-
+        response =  requests.get('http://163.172.168.41:8888/services/files/download/newdir/' + imageFileNameList[counter], cookies=cookies)
+        selfobj.loadedimages.append(response)
         counter += 1
         pass
+
+

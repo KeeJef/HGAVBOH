@@ -115,6 +115,7 @@ class PaintApp:
 
         commit = cryptostuff.commit(self, True)
         self.readyToGo['commit'] = commit
+        self.imagehash = self.readyToGo['imageHash']
         postsandgets.uploadfile(self.nonce, self.readyToGo)
 
     def nothumanmade(self):

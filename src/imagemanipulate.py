@@ -33,13 +33,15 @@ def getImageReady(selfobj):
     #Add cryptokeys here 
 
     imageJSON['public_key'] = public_key
-    imageJSON['nonce'] = selfobj.nonce
+    #imageJSON['nonce'] = selfobj.nonce
     imageJSON['timestamp'] = int(time.time())
     imageJSON['blockHash'] = selfobj.blockhash
     imageJSON['imageHash'] = imagehash
 
-    readyToSignString = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['nonce'] +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash'] #Get all values into string for singing
-    signature = cryptostuff.signHashes(selfobj, readyToSignString)
+    #readyToSignString = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['nonce'] +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash'] #Get all values into string for singing
+    readyToSignString = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash'] #Get all values into string for singing
+
+    signature = cryptostuff.signString(selfobj, readyToSignString)
 
     image = zlib.compress(image) #compress image 
 

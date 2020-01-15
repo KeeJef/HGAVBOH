@@ -5,12 +5,13 @@ from os import path
 import os 
 import time
 import random
+import math
 import hashlib
 import json
 import base64
 import zlib
 
-def signHashes(selfobj, dataToSign):
+def signString(selfobj, dataToSign):
 
     dataToSign = str.encode(dataToSign)
     signature = selfobj.private_key.sign(dataToSign)  
@@ -64,13 +65,39 @@ def commit (selfobj, descion):
     commitNonce = str(random.getrandbits(64))
     commitTimestamp = str(int(time.time()))
     descion = str(descion)
-    commit = commitNonce + '||' + commitTimestamp +'||'+ descion
+    commit = commitNonce + '||' + commitTimestamp +'||'+ descion 
     selfobj.revealdata = commit
     commit = commit.encode('utf-8')
     commit = hashlib.blake2b(commit).hexdigest()
 
     return commit
 
+def reveal(selfobj):
+    revealTimestamp = str(int(time.time()))
+    reveal = revealTimestamp + '||' selfobj.nonce + '||' selfobj.revealdata + '||' + selfobj.imagehash
+    signature = signString(selfobj, reveal)
+
+    revealwithsig  = reveal + '!!!!!!!' + signature
+
+    return revealwithsig
+
+def calculateRound():
+    #as long as the server generates the same timestamp as us this should give us information about the currently running round, including whether the round
+    #is a commit or reveal round and what time that round ends
+    timeinfoarray = []
+    currenttimestamp = int(time.time())
+    timepaststart = (currenttimestamp - 1579097000)/600 #decided we will start here, we could just start from 0, but i wanted to start here 
+    
+    if math.floor(timepaststart) % 2 == 0:
+        currentround = 'Commit'
+        pass
+    else:
+        currentround = 'Reveal'
+        pass
+
+    timeinfoarray.append(timepaststart)
+    timeinfoarray.append(currentround)
+    return timeinfoarray
 
 def verifyimages(selfobj):
     counter = 0 

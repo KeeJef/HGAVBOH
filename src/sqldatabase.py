@@ -1,11 +1,19 @@
 import sqlite3
 from sqlite3 import Error
 
-sql_create_projects_table = """ CREATE TABLE IF NOT EXISTS projects (
+
+#This file might be used if storing the images in memory becomes annoying
+
+sql_create_images_table = """ CREATE TABLE IF NOT EXISTS images (
                                     id integer PRIMARY KEY,
-                                    name text NOT NULL,
-                                    begin_date text,
-                                    end_date text
+                                    public_key text NOT NULL,
+                                    timestamp text,
+                                    blockhash text,
+                                    imagehash text,
+                                    signature text,
+                                    commit text, 
+                                    votedfornode text,
+                                    rawimagebytes text,
                                 ); """
  
  
@@ -32,9 +40,22 @@ def create_table(conn):
     """
     try:
         c = conn.cursor()
-        c.execute(sql_create_projects_table)
+        c.execute(sql_create_images_table)
     except Error as e:
         print(e)
+
+def create_image(conn, imageentry):
+    """
+    Create a new image into the images table
+    :param conn:
+    :param project:
+    :return: project id
+    """
+    sql = ''' INSERT INTO images(public_key,timestamp,blockhash,imagehash,signature,commit,votedfornode,rawimagebytes)
+              VALUES(?,?,?,?,?,?,?,?) '''
+    cur = conn.cursor()
+    cur.execute(sql, imageentry)
+    return cur.lastrowid
  
  
 if __name__ == '__main__':

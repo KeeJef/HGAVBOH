@@ -9,6 +9,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import io
+import datetime
 import words
 import imagemanipulate
 import cryptostuff
@@ -128,6 +129,20 @@ class PaintApp:
         self.readyToGo['commit'] = commit
         postsandgets.uploadfile(self.nonce, self.readyToGo)
 
+    def countdown(self,param):
+        
+        self.timer['text'] = datetime.timedelta(seconds=param)
+        self.timertext['text'] = self.array[1]
+        if param > 0:
+            # call countdown again after 1000ms (1s)
+            root.after(1000, self.countdown, param-1)
+            print(param)
+        else:
+            self.array = cryptostuff.calculateRound()
+            param = self.array[0]
+            self.timertext['text'] = self.array[1]
+            self.countdown(param)
+
 
     def __init__(self, root):
 
@@ -166,13 +181,14 @@ class PaintApp:
         # Add buttons for Finishing getting new word combos and clearing the canvas
 
         toolbar = Frame(self.tab1,bd=1,relief = RAISED)
+        self.timer = Label(toolbar, text="", width=10)
+        self.timertext = Label(toolbar, text="", width=10)
 
         save_img = Image.open("../assets/save.png")
         newwords_img = Image.open("../assets/newwords.png")
         clearcanvas_img = Image.open("../assets/clearcanvas.png")
         selectcolour_img = Image.open("../assets/selectcolour.png")
         
-
         save_icon = ImageTk.PhotoImage(save_img)
         newwords_icon = ImageTk.PhotoImage(newwords_img)
         clearcanvas_icon = ImageTk.PhotoImage(clearcanvas_img)
@@ -197,6 +213,12 @@ class PaintApp:
         newwords_button.pack (side = LEFT, padx=2, pady=2)
         clearcanvas_button.pack (side = LEFT, padx=2, pady=2)
         selectcolour_button.pack (side = LEFT, padx=2, pady=2)
+        self.timer.pack(side = RIGHT, padx=2, pady=2)
+        self.timertext.pack(side = RIGHT, padx=2, pady=2)
+
+
+        self.array = cryptostuff.calculateRound()
+        self.countdown(self.array[0])
         
 
         self.choose_size_button.pack (side = LEFT, padx=2, pady=2)
@@ -278,8 +300,9 @@ class PaintApp:
         
         #Text Area for verification words 
 
-        
         self.verifytextarea.pack( side = RIGHT )
+
+
 
 root = Tk()
 root.title('Human Art Generation Interface')

@@ -74,7 +74,7 @@ def commit (selfobj, descion):
 
 def reveal(selfobj):
     revealTimestamp = str(int(time.time()))
-    reveal = revealTimestamp + '||' selfobj.nonce + '||' selfobj.revealdata + '||' + selfobj.imagehash
+    reveal = revealTimestamp + '||' + selfobj.nonce + '||' + selfobj.revealdata + '||' + selfobj.imagehash
     signature = signString(selfobj, reveal)
 
     revealwithsig  = reveal + '!!!!!!!' + signature
@@ -95,7 +95,11 @@ def calculateRound():
         currentround = 'Reveal'
         pass
 
-    timeinfoarray.append(timepaststart)
+    timepaststart =  timepaststart % 1 
+    timepaststart = timepaststart * 600
+    timepaststart = 600 - timepaststart
+
+    timeinfoarray.append(int(timepaststart))
     timeinfoarray.append(currentround)
     return timeinfoarray
 

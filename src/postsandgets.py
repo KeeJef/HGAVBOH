@@ -21,7 +21,7 @@ def uploadreveal(selfobj, revealdata):
 
         cookies = login()
         files = {'file': (revealdata),}
-        requests.post('http://163.172.168.41:8888/services/files/upload/reveal/'+ selfobj.imagehash + '.txt', cookies=cookies, files=files)
+        requests.post('http://163.172.168.41:8888/services/files/upload/reveal/'+ selfobj.readyToGo['imageHash'] + '.txt', cookies=cookies, files=files)
 
 def getRevealList(selfobj):
     counter = 0

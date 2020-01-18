@@ -147,6 +147,7 @@ class PaintApp:
             self.array = cryptostuff.calculateRound()
             if self.finishedgate == True and self.array[1] == 'Reveal':
                 postsandgets.uploadreveal(self,cryptostuff.reveal(self))
+                self.finishedgate = False
                 pass
 
             param = self.array[0]

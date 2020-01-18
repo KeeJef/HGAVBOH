@@ -76,6 +76,7 @@ def reveal(selfobj):
     revealTimestamp = str(int(time.time()))
     reveal = revealTimestamp + '||' + selfobj.nonce + '||' + selfobj.revealdata + '||' + selfobj.readyToGo['imageHash']
     signature = signString(selfobj, reveal)
+    signature = str(signature)
     #come back to this and do bytes conversions
     revealwithsig  = reveal + '!!!!!!!' + signature
 

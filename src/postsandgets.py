@@ -23,6 +23,34 @@ def uploadreveal(selfobj, revealdata):
         files = {'file': (revealdata),}
         requests.post('http://163.172.168.41:8888/services/files/upload/reveal/'+ selfobj.imagehash + '.txt', cookies=cookies, files=files)
 
+def getRevealList(selfobj):
+    counter = 0
+    revealFileNameList = []
+    cookies = login()
+    response = requests.get('http://163.172.168.41:8888/services/files/list/reveal', cookies=cookies)
+    jsonresponse  = json.loads(response.text)
+    jsonresponse = jsonresponse['fileInfo']
+
+    while len(jsonresponse)!= counter:
+        revealFileNameList.append(jsonresponse[counter]['filePath'])
+        counter += 1
+        pass
+    selfobj.revealFileNameList = revealFileNameList
+    return
+
+def getReveals(selfobj):
+
+    selfobj.loadedReveals = []
+    revealFileNameList = selfobj.revealFileNameList
+    counter = 0
+    cookies = login()
+    while len(revealFileNameList) != counter:
+        response =  requests.get('http://163.172.168.41:8888/services/files/download/reveal/' + revealFileNameList[counter], cookies=cookies)
+        selfobj.loadedReveals.append(response)
+        counter += 1
+        pass
+
+
 def getImageList(selfobj):
     counter = 0
     imageFileNameList = []

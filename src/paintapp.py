@@ -88,7 +88,11 @@ class PaintApp:
         self.img = ImageTk.PhotoImage(Image.open(bytesImage))
         self.viewingcanvas.create_image(20,20,anchor=NW, image=self.img)  
 
-        derivedwords = words.getWordsFromNonceHash(imageJSON['nonce'],imageJSON['blockHash'])
+        try:
+            derivedwords = words.getWordsFromNonceHash(imageJSON['nonce'],imageJSON['blockHash'])
+        except:
+            derivedwords = "This Image is still in the Reveal stage"
+            pass
        
         self.verifytextarea.config(state=NORMAL)
         self.verifytextarea.delete('1.0', END)
@@ -136,9 +140,15 @@ class PaintApp:
         if param > 0:
             # call countdown again after 1000ms (1s)
             root.after(1000, self.countdown, param-1)
-            print(param)
+            
         else:
+            #if we are in a reveal round and the subission flag is true then we want to initate the reveal process,
+            #buttons for submission should intitiate this process
             self.array = cryptostuff.calculateRound()
+            if self.finishedgate == True and self.array[1] == 'Reveal':
+                postsandgets.uploadreveal(self,cryptostuff.reveal(self))
+                pass
+
             param = self.array[0]
             self.timertext['text'] = self.array[1]
             self.countdown(param)
@@ -157,6 +167,10 @@ class PaintApp:
         #Pre fetch images for verification
         postsandgets.getImageList(self)
         postsandgets.fetchImages(self)
+
+        postsandgets.getRevealList(self)
+        postsandgets.getReveals(self)
+
         cryptostuff.verifyimages(self)
         
         #tabs

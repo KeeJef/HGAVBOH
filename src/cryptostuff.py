@@ -74,19 +74,24 @@ def commit (selfobj, descion):
 
 def reveal(selfobj):
     revealTimestamp = str(int(time.time()))
-    reveal = revealTimestamp + '||' + selfobj.nonce + '||' + selfobj.revealdata + '||' + selfobj.imagehash
+    reveal = revealTimestamp + '||' + selfobj.nonce + '||' + selfobj.revealdata + '||' + selfobj.readyToGo['imageHash']
     signature = signString(selfobj, reveal)
-
+    #come back to this and do bytes conversions
     revealwithsig  = reveal + '!!!!!!!' + signature
 
     return revealwithsig
+
+def matchAndValdateReveal():
+    pass
+    #this fuction needs to match the images in the pool with the reveals and validate if they are singed and correct
 
 def calculateRound():
     #as long as the server generates the same timestamp as us this should give us information about the currently running round, including whether the round
     #is a commit or reveal round and what time that round ends
     timeinfoarray = []
+    roundtime = 30
     currenttimestamp = int(time.time())
-    timepaststart = (currenttimestamp - 1579097000)/600 #decided we will start here, we could just start from 0, but i wanted to start here 
+    timepaststart = (currenttimestamp - 1579097000)/roundtime #decided we will start here, we could just start from 0, but i wanted to start here 
     
     if math.floor(timepaststart) % 2 == 0:
         currentround = 'Commit'
@@ -96,8 +101,8 @@ def calculateRound():
         pass
 
     timepaststart =  timepaststart % 1 
-    timepaststart = timepaststart * 600
-    timepaststart = 600 - timepaststart
+    timepaststart = timepaststart * roundtime
+    timepaststart = roundtime - timepaststart
 
     timeinfoarray.append(int(timepaststart))
     timeinfoarray.append(currentround)
@@ -113,7 +118,7 @@ def verifyimages(selfobj):
         imageJSON['singature'] = imageJSON['singature'].encode('utf-8')
         imageJSON['singature'] = base64.decodebytes(imageJSON['singature'])
         
-        singeddata = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['nonce'] +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash']
+        singeddata = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash']
         singeddata = str.encode(singeddata)
         
         #verify the header data is singed by the contained key 

@@ -76,7 +76,8 @@ def reveal(selfobj):
     revealTimestamp = str(int(time.time()))
     reveal = revealTimestamp + '||' + selfobj.nonce + '||' + selfobj.revealdata + '||' + selfobj.readyToGo['imageHash'] + '||'
     signature = signString(selfobj, reveal)
-    signature = str(signature)
+    signature = base64.encodebytes(signature)
+    signature =  signature.decode('utf-8')
     #come back to this and do bytes conversions
     revealwithsig  = reveal + '!!!!!!!' + signature
 
@@ -142,9 +143,14 @@ def verifyimages(selfobj):
         #if reveal imagehash matches an already fetched image then we need to verify - the signature for the reveal matches the fetched image 
         #the nonce when combined with the blockhash = the commit
         #if both of these check out then we need to add the cleartext image and register their vote in our db (Vote is not yet cast until this image checks out)
+
         while len(selfobj.loadedReveals) != counter2:
 
             if imageJSON['imageHash'] == selfobj.loadedReveals[counter2][5]:
+
+                print("hashmatch")
+                publickey.verify(selfobj.loadedReveals[counter2][6],selfobj.loadedReveals[counter2][7]) # the data is not in bytes reverse the conversions when we got this data
+
 
                 pass
 

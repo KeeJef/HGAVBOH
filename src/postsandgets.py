@@ -1,6 +1,7 @@
 import requests
 import json
 import sqldatabase
+import base64
 
 def login():
     headers = {'Content-Type': 'application/json',}
@@ -48,9 +49,13 @@ def getReveals(selfobj):
         response =  requests.get('http://163.172.168.41:8888/services/files/download/reveal/' + revealFileNameList[counter], cookies=cookies)
         response = response.content.decode('utf-8')
         signature = response.split('!!!!!!!')[1]
-        response = response.split('||')
-        response[6] = signature
-        selfobj.loadedReveals.append(response)
+        splitlist = response.split('||')
+        splitlist.append(response.split('!!!!!!!')[0])
+
+        signature = signature.encode('utf-8')
+        splitlist[6] = base64.decodebytes(signature)
+
+        selfobj.loadedReveals.append(splitlist)
         counter += 1
         pass
 

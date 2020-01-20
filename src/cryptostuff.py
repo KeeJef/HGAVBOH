@@ -74,7 +74,7 @@ def commit (selfobj, descion):
 
 def reveal(selfobj):
     revealTimestamp = str(int(time.time()))
-    reveal = revealTimestamp + '||' + selfobj.nonce + '||' + selfobj.revealdata + '||' + selfobj.readyToGo['imageHash']
+    reveal = revealTimestamp + '||' + selfobj.nonce + '||' + selfobj.revealdata + '||' + selfobj.readyToGo['imageHash'] + '||'
     signature = signString(selfobj, reveal)
     signature = str(signature)
     #come back to this and do bytes conversions
@@ -112,6 +112,7 @@ def calculateRound():
 def verifyimages(selfobj):
     counter = 0 
     while len(selfobj.loadedimages) != counter:
+        counter2 = 0
 
         imageJSON = selfobj.loadedimages[counter].content.decode('utf-8')
         imageJSON = json.loads(imageJSON)
@@ -138,8 +139,20 @@ def verifyimages(selfobj):
             selfobj.loadedimages.remove(counter)
             counter += 1
             continue
+        #if reveal imagehash matches an already fetched image then we need to verify - the signature for the reveal matches the fetched image 
+        #the nonce when combined with the blockhash = the commit
+        #if both of these check out then we need to add the cleartext image and register their vote in our db (Vote is not yet cast until this image checks out)
+        while len(selfobj.loadedReveals) != counter2:
+
+            if imageJSON['imageHash'] == selfobj.loadedReveals[counter2][5]:
+
+                pass
+
+            counter2 += 1 
+            pass
 
         counter += 1 
         pass
+
 
         

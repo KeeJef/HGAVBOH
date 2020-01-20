@@ -46,9 +46,15 @@ def getReveals(selfobj):
     cookies = login()
     while len(revealFileNameList) != counter:
         response =  requests.get('http://163.172.168.41:8888/services/files/download/reveal/' + revealFileNameList[counter], cookies=cookies)
+        response = response.content.decode('utf-8')
+        signature = response.split('!!!!!!!')[1]
+        response = response.split('||')
+        response[6] = signature
         selfobj.loadedReveals.append(response)
         counter += 1
         pass
+
+    
 
 
 def getImageList(selfobj):

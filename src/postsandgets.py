@@ -18,11 +18,12 @@ def uploadfile(nonce,dataJSON):
         files = {'file': (dataJSON),}
         requests.post('http://163.172.168.41:8888/services/files/upload/newdir/'+ nonce + '.json', cookies=cookies, files=files)
 
-def uploadreveal(selfobj, revealdata):
-
+def uploadreveal(selfobj, revealJSON):
         cookies = login()
-        files = {'file': (revealdata),}
-        requests.post('http://163.172.168.41:8888/services/files/upload/reveal/'+ selfobj.readyToGo['imageHash'] + '.txt', cookies=cookies, files=files)
+        revealJSON = json.dumps(revealJSON)
+        revealJSON = revealJSON.encode('utf-8')
+        files = {'file': (revealJSON),}
+        requests.post('http://163.172.168.41:8888/services/files/upload/reveal/'+ selfobj.readyToGo['imageHash'] + '.json', cookies=cookies, files=files)
 
 def getRevealList(selfobj):
     counter = 0
@@ -47,15 +48,7 @@ def getReveals(selfobj):
     cookies = login()
     while len(revealFileNameList) != counter:
         response =  requests.get('http://163.172.168.41:8888/services/files/download/reveal/' + revealFileNameList[counter], cookies=cookies)
-        response = response.content.decode('utf-8')
-        signature = response.split('!!!!!!!')[1]
-        splitlist = response.split('||')
-        splitlist.append(response.split('!!!!!!!')[0])
-
-        signature = signature.encode('utf-8')
-        splitlist[6] = base64.decodebytes(signature)
-
-        selfobj.loadedReveals.append(splitlist)
+        selfobj.loadedReveals.append(response.text)
         counter += 1
         pass
 

@@ -59,29 +59,38 @@ def generateOrLoadKeypair(selfobj):
         selfobj.private_key  = serialization.load_pem_private_key(data=textualPrivateKey,password=None,backend=default_backend())
 
 def commit (selfobj, descion):
-
+    revealdata = {}
     #Commit stage of commit reveal voting, save reveal info in revealdata for a later point
 
-    commitNonce = str(random.getrandbits(64))
-    commitTimestamp = str(int(time.time()))
-    descion = str(descion)
-    commit = commitNonce + '||' + commitTimestamp +'||'+ descion 
-    selfobj.revealdata = commit
+    revealdata['commitNonce'] = str(random.getrandbits(64))
+    revealdata['commitTimestamp'] = str(int(time.time()))
+    revealdata['descion'] = str(descion)
+    commit = revealdata['commitNonce'] + revealdata['commitTimestamp'] + revealdata['descion']
+    selfobj.revealdata = revealdata
+    
     commit = commit.encode('utf-8')
     commit = hashlib.blake2b(commit).hexdigest()
 
     return commit
 
 def reveal(selfobj):
-    revealTimestamp = str(int(time.time()))
-    reveal = revealTimestamp + '||' + selfobj.nonce + '||' + selfobj.revealdata + '||' + selfobj.readyToGo['imageHash'] + '||'
-    signature = signString(selfobj, reveal)
-    signature = base64.encodebytes(signature)
-    signature =  signature.decode('utf-8')
-    #come back to this and do bytes conversions
-    revealwithsig  = reveal + '!!!!!!!' + signature
+    revealJSON = {}
 
-    return revealwithsig
+    revealJSON['revealTimestamp'] = str(int(time.time()))
+    revealJSON['imageNonce'] = selfobj.nonce
+    revealJSON['revealCommitNonce'] = selfobj.revealdata['commitNonce']
+    revealJSON['revealCommitTimestamp'] = selfobj.revealdata['commitTimestamp']
+    revealJSON['revealCommitDecision'] = selfobj.revealdata['descion']
+    revealJSON['imageHash'] = selfobj.readyToGo['imageHash']
+
+    revealConcat = revealJSON['revealTimestamp'] + revealJSON['imageNonce'] + revealJSON['revealCommitNonce'] + revealJSON['revealCommitTimestamp'] + \
+    revealJSON['revealCommitDecision'] + revealJSON['imageHash']
+
+    signature = signString(selfobj, revealConcat)
+    signature =  base64.encodebytes(signature)
+    revealJSON['singature'] = signature.decode('utf-8')
+
+    return revealJSON
 
 def matchAndValdateReveal():
     pass
@@ -121,7 +130,7 @@ def verifyimages(selfobj):
         imageJSON['singature'] = imageJSON['singature'].encode('utf-8')
         imageJSON['singature'] = base64.decodebytes(imageJSON['singature'])
         
-        singeddata = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash']
+        singeddata = imageJSON['public_key'] + str(imageJSON['timestamp']) + imageJSON['imageHash'] + imageJSON['blockHash']
         singeddata = str.encode(singeddata)
         
         #verify the header data is singed by the contained key 
@@ -149,8 +158,7 @@ def verifyimages(selfobj):
             if imageJSON['imageHash'] == selfobj.loadedReveals[counter2][5]:
 
                 print("hashmatch")
-                publickey.verify(selfobj.loadedReveals[counter2][6],selfobj.loadedReveals[counter2][7]) # the data is not in bytes reverse the conversions when we got this data
-
+                publickey.verify(selfobj.loadedReveals[counter2][6],str.encode(selfobj.loadedReveals[counter2][7])) # Start back on this with the better encoded commits and reveals
 
                 pass
 

@@ -39,7 +39,7 @@ def getImageReady(selfobj):
     imageJSON['imageHash'] = imagehash
 
     #readyToSignString = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['nonce'] +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash'] #Get all values into string for singing
-    readyToSignString = imageJSON['public_key'] +'||'+ str(imageJSON['timestamp']) +'||'+ imageJSON['imageHash'] +'||'+ imageJSON['blockHash'] #Get all values into string for singing
+    readyToSignString = imageJSON['public_key'] + str(imageJSON['timestamp']) + imageJSON['imageHash'] + imageJSON['blockHash'] #Get all values into string for singing
 
     signature = cryptostuff.signString(selfobj, readyToSignString)
 

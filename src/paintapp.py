@@ -76,8 +76,7 @@ class PaintApp:
         w = evt.widget
         index = int(w.curselection()[0])
 
-        imageJSON = self.loadedimages[index].content.decode('utf-8')
-        imageJSON = json.loads(imageJSON)
+        imageJSON = self.loadedimages[index]
 
         imageJSON['imageRawBytes'] = imageJSON['imageRawBytes'].encode('utf-8')
         imageJSON['imageRawBytes'] = base64.decodebytes(imageJSON['imageRawBytes'])
@@ -273,7 +272,7 @@ class PaintApp:
         listboxframe= Frame(tab2,bd=1,relief = RAISED)
 
         counter = 0
-        listbox = Listbox(listboxframe)
+        listbox = Listbox(listboxframe) # Only show the user one image to vote on, get that image randomly, showing all images serves no purpose
         while counter != len(self.imageFileNameList):
             listbox.insert(counter,self.imageFileNameList[counter])
             counter += 1

@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter.colorchooser import askcolor
 import tkinter.font
 import json
+from random import randrange
 import base64
 import zlib
 from io import BytesIO
@@ -10,6 +11,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import io
 import datetime
+import sys
 import words
 import imagemanipulate
 import cryptostuff
@@ -71,11 +73,9 @@ class PaintApp:
             self.x_pos = event.x
             self.y_pos = event.y   
 
-    def on(self,evt):
+    def renderRandomFetched(self):
         # Note here that Tkinter passes an event object to on()
-        w = evt.widget
-        index = int(w.curselection()[0])
-
+        index = randrange(len(self.loadedimages) - 1)
         imageJSON = self.loadedimages[index]
 
         imageJSON['imageRawBytes'] = imageJSON['imageRawBytes'].encode('utf-8')
@@ -132,31 +132,50 @@ class PaintApp:
         self.readyToGo['commit'] = commit
         postsandgets.uploadfile(self.nonce, self.readyToGo)
 
-    def countdown(self,param):
+    def get_sec(self,time_str):
+        h, m, s = time_str.split(':')
+        return int(h) * 3600 + int(m) * 60 + int(s)
+
+    def renderRound(self):
+        roundarray = cryptostuff.calculateRound()
+        self.timer['text'] = datetime.timedelta(seconds=roundarray[0])
+        self.timertext['text'] = roundarray[1]
+
+    def decrementRound(self):
+        currentintcount = self.get_sec(self.timer['text'])
+        newtimeintcount = currentintcount - 1
+
+        if newtimeintcount == 0:
+            newtimeintcount = 30
+
+            if self.timertext["text"] == 'Reveal':
+                self.timertext["text"] = 'Commit'
+                pass
+            else:
+                self.timertext["text"] = 'Reveal'
+                pass
+            self.checkRound()
+
+            pass
+
+        self.timer['text'] = datetime.timedelta(seconds=newtimeintcount)
+
+        root.after(1000, lambda: self.decrementRound())
+
+    def checkRound(self):
         
-        self.timer['text'] = datetime.timedelta(seconds=param)
-        self.timertext['text'] = self.array[1]
-        if param > 0:
-            # call countdown again after 1000ms (1s)
-            root.after(1000, self.countdown, param-1)
-            
-        else:
-            #if we are in a reveal round and the subission flag is true then we want to initate the reveal process,
-            #buttons for submission should intitiate this process
-            self.array = cryptostuff.calculateRound()
-            if self.finishedgate == True and self.array[1] == 'Reveal':
-                postsandgets.uploadreveal(self,cryptostuff.reveal(self))
+        if self.finishedgate == True and self.timertext["text"] == 'Reveal':
+                postsandgets.uploadreveal(self,cryptostuff.reveal(self)) #issue with reveal data
                 self.finishedgate = False
                 pass
-
-            param = self.array[0]
-            self.timertext['text'] = self.array[1]
-            self.countdown(param)
 
 
     def __init__(self, root):
 
+
         root.geometry("1250x650")
+        root.minsize(width=700, height=650)
+        root.maxsize(width = 1920,height=650)
 
         #Set default finished value to false
         self.finishedgate = False
@@ -230,10 +249,9 @@ class PaintApp:
         self.timer.pack(side = RIGHT, padx=2, pady=2)
         self.timertext.pack(side = RIGHT, padx=2, pady=2)
 
-
-        self.array = cryptostuff.calculateRound()
-        self.countdown(self.array[0])
-        
+        self.renderRound()
+        #root.after(30000, lambda: self.changeRound()) #Round Swapper
+        root.after(1000, lambda: self.decrementRound()) #counter
 
         self.choose_size_button.pack (side = LEFT, padx=2, pady=2)
         self.choose_size_button.set(5)
@@ -242,11 +260,12 @@ class PaintApp:
     
       # Add drawing area
 
-        drawing_area = Canvas(self.tab1, bd=2, highlightthickness=1, relief='ridge')
+        drawing_area = Canvas(self.tab1, bd=2, highlightthickness=1, relief='ridge', width =600 , height =550) 
         drawing_area.pack(side = LEFT, fill="both", expand=True)
         drawing_area.bind("<Motion>", self.motion)
         drawing_area.bind("<ButtonPress-1>", self.left_but_down)
         drawing_area.bind("<ButtonRelease-1>", self.left_but_up)
+        
 
       # Add Text Area for displaying word combos
 
@@ -264,31 +283,12 @@ class PaintApp:
 
         #Create viewing canvas in prep to be accept mapping from listbox
 
-        self.viewingcanvas = Canvas(tab2, bd=2, highlightthickness=1, relief='ridge')
+        self.viewingcanvas = Canvas(tab2, bd=2, highlightthickness=1, relief='ridge', width =600 , height =550)
 
         
      # Add list box for verification
 
-        listboxframe= Frame(tab2,bd=1,relief = RAISED)
-
-        counter = 0
-        listbox = Listbox(listboxframe) # Only show the user one image to vote on, get that image randomly, showing all images serves no purpose
-        while counter != len(self.imageFileNameList):
-            listbox.insert(counter,self.imageFileNameList[counter])
-            counter += 1
-            pass
-        listbox.bind('<<ListboxSelect>>', self.on)
-        listbox.select_set(0)
-        listbox.event_generate("<<ListboxSelect>>")
-
-        refresh_img = Image.open("../assets/refresh.png")
-        refresh_icon = ImageTk.PhotoImage(refresh_img)
-        refresh_button = Button(listboxframe, image=refresh_icon, command =lambda: postsandgets.refreshlist(self,listbox))
-        refresh_button.image = refresh_icon
-        refresh_button.pack (side=tkinter.BOTTOM, padx=2, pady=2)
-
-        listbox.pack()
-        listboxframe.pack(side = LEFT)
+        self.renderRandomFetched()
 
         #buttons for verification panel 
 

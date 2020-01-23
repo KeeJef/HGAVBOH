@@ -179,7 +179,8 @@ def verifyimages(selfobj):
 
                     selfobj.loadedimages[counter]['nonce'] = loadedRevealsJSON['imageNonce']
 
-
+                    # if all of this has checked out we need to work out what do with their vote, i think it needs to go into a DB and be released when other people 
+                    #majority vote them as gucci
                     pass
 
                 pass

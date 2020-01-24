@@ -75,7 +75,13 @@ class PaintApp:
 
     def renderRandomFetched(self):
         # Note here that Tkinter passes an event object to on()
+
+        if len(self.loadedimages) == 0:
+            return
+            pass
+
         index = randrange(len(self.loadedimages) - 1)
+        self.imagechoice  = index
         imageJSON = self.loadedimages[index]
 
         imageJSON['imageRawBytes'] = imageJSON['imageRawBytes'].encode('utf-8')

@@ -65,7 +65,15 @@ def commit (selfobj, descion):
     revealdata['commitNonce'] = str(random.getrandbits(64))
     revealdata['commitTimestamp'] = str(int(time.time()))
     revealdata['descion'] = str(descion)
-    commit = revealdata['commitNonce'] + revealdata['commitTimestamp'] + revealdata['descion']
+
+    try:
+        revealdata['voteTarget'] = selfobj.loadedimages[selfobj.imagechoice]['imageHash']
+        pass
+    except:
+        revealdata['voteTarget'] = 'FAKE IMAGE HASH'
+        pass
+
+    commit = revealdata['commitNonce'] + revealdata['commitTimestamp'] + revealdata['descion'] + revealdata["voteTarget"] 
     selfobj.revealdata = revealdata
     
     commit = commit.encode('utf-8')
@@ -82,9 +90,10 @@ def reveal(selfobj):
     revealJSON['revealCommitTimestamp'] = selfobj.revealdata['commitTimestamp']
     revealJSON['revealCommitDecision'] = selfobj.revealdata['descion']
     revealJSON['imageHash'] = selfobj.readyToGo['imageHash']
+    revealJSON['voteTarget'] = selfobj.revealdata['voteTarget']
 
     revealConcat = revealJSON['revealTimestamp'] + revealJSON['imageNonce'] + revealJSON['revealCommitNonce'] + revealJSON['revealCommitTimestamp'] + \
-    revealJSON['revealCommitDecision'] + revealJSON['imageHash']
+    revealJSON['revealCommitDecision'] + revealJSON['imageHash'] + revealJSON['voteTarget']
 
     signature = signString(selfobj, revealConcat)
     signature =  base64.encodebytes(signature)
@@ -92,9 +101,19 @@ def reveal(selfobj):
 
     return revealJSON
 
-def matchAndValdateReveal():
+def createIsolatedVote():
+#this function is intended to create the vote assciated with the commit on the submitter side
+#a vote should have the image hash it came from the image its voting for the descision and a signature proving it relates to X image
+    voteJSON = {}
+
+    voteJSON['originImageHash'] = selfobj.readyToGo['imageHash']
+   # voteJSON['voteForImageHash'] = 
+    voteJSON['decision']
+    voteJSON['signature']
+
+
     pass
-    #this fuction needs to match the images in the pool with the reveals and validate if they are singed and correct
+
 
 def calculateRound():
     #as long as the server generates the same timestamp as us this should give us information about the currently running round, including whether the round
@@ -164,7 +183,8 @@ def verifyimages(selfobj):
             preSignData =  loadedRevealsJSON['revealTimestamp'] + loadedRevealsJSON['imageNonce'] + loadedRevealsJSON['revealCommitNonce'] + \
             loadedRevealsJSON['revealCommitTimestamp'] + loadedRevealsJSON['revealCommitDecision'] + loadedRevealsJSON['imageHash']
 
-            preRevealData = loadedRevealsJSON['revealCommitNonce'] + loadedRevealsJSON['revealCommitTimestamp'] + loadedRevealsJSON['revealCommitDecision']
+            #check commit reveals are stil working as epxected with the vote targets addded
+            preRevealData = loadedRevealsJSON['revealCommitNonce'] + loadedRevealsJSON['revealCommitTimestamp'] + loadedRevealsJSON['revealCommitDecision'] + loadedRevealsJSON['voteTarget']
             preRevealData = preRevealData.encode('utf-8')
             preRevealData = hashlib.blake2b(preRevealData).hexdigest()
 

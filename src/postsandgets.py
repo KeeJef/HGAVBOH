@@ -25,6 +25,15 @@ def uploadreveal(selfobj, revealJSON):
         files = {'file': (revealJSON),}
         requests.post('http://163.172.168.41:8888/services/files/upload/reveal/'+ selfobj.readyToGo['imageHash'] + '.json', cookies=cookies, files=files)
 
+
+def uploadvotes(selfobj, votesJSON):
+        cookies = login()
+        votesJSON = json.dumps(votesJSON)
+        votesJSON = votesJSON.encode('utf-8')
+        files = {'file': (votesJSON),}
+        requests.post('http://163.172.168.41:8888/services/files/upload/votes/'+ selfobj.readyToGo['imageHash'] + '.json', cookies=cookies, files=files)
+
+
 def getRevealList(selfobj):
     counter = 0
     revealFileNameList = []

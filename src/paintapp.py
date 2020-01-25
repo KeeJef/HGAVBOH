@@ -80,7 +80,7 @@ class PaintApp:
             return
             pass
 
-        index = randrange(len(self.loadedimages) - 1)
+        index = randrange(len(self.loadedimages))
         self.imagechoice  = index
         imageJSON = self.loadedimages[index]
 

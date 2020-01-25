@@ -5,6 +5,7 @@ from os import path
 import os 
 import time
 import random
+import postsandgets
 import math
 import hashlib
 import json
@@ -99,18 +100,27 @@ def reveal(selfobj):
     signature =  base64.encodebytes(signature)
     revealJSON['singature'] = signature.decode('utf-8')
 
+    createIsolatedVote(selfobj)
+
     return revealJSON
 
-def createIsolatedVote():
+def createIsolatedVote(selfobj):
 #this function is intended to create the vote assciated with the commit on the submitter side
 #a vote should have the image hash it came from the image its voting for the descision and a signature proving it relates to X image
     voteJSON = {}
 
     voteJSON['originImageHash'] = selfobj.readyToGo['imageHash']
-   # voteJSON['voteForImageHash'] = 
-    voteJSON['decision']
-    voteJSON['signature']
+    voteJSON['voteForImageHash'] = selfobj.revealdata['voteTarget']
+    voteJSON['decision'] = selfobj.revealdata['descion']
 
+    presigndata = voteJSON['originImageHash'] + voteJSON['voteForImageHash'] + voteJSON['decision']
+
+    signature = signString(selfobj, presigndata)
+    signature =  base64.encodebytes(signature)
+
+    voteJSON['signature'] = signature.decode('utf-8')
+
+    postsandgets.uploadvotes(selfobj,voteJSON)
 
     pass
 
@@ -181,7 +191,7 @@ def verifyimages(selfobj):
             loadedRevealsJSON['singature'] = base64.decodebytes(loadedRevealsJSON['singature'])
 
             preSignData =  loadedRevealsJSON['revealTimestamp'] + loadedRevealsJSON['imageNonce'] + loadedRevealsJSON['revealCommitNonce'] + \
-            loadedRevealsJSON['revealCommitTimestamp'] + loadedRevealsJSON['revealCommitDecision'] + loadedRevealsJSON['imageHash']
+            loadedRevealsJSON['revealCommitTimestamp'] + loadedRevealsJSON['revealCommitDecision'] + loadedRevealsJSON['imageHash'] + loadedRevealsJSON['voteTarget']
 
             #check commit reveals are stil working as epxected with the vote targets addded
             preRevealData = loadedRevealsJSON['revealCommitNonce'] + loadedRevealsJSON['revealCommitTimestamp'] + loadedRevealsJSON['revealCommitDecision'] + loadedRevealsJSON['voteTarget']

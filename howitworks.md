@@ -43,19 +43,21 @@ Client generates a long term ed25519 keypair which is stored on disk
 Client generates words by concternating nonce with blockhash hashing the result and feeding it as the seed to a PRNG which chooses words from a word list 
 Client draws a picture related to those words, when finished they click the save button 
 When the save button is clicked this initiates the process of packing the image, packing the image means the raw image bytes + a timestamp + a hash of the image and the current blockhash is all signed by the long term ed25519 key
-Client will then switch to the voting mode, a random image which was fetched from the trusted Server is displayed, the client must decide whether that image is produced by a human or not.
-Once the client has voted, they produce a commit, which includes a commit nonce + a commit timestamp + the decision + the imagehash of the target they voted on. This data is conceternated and then hashed together, and added to the packed image 
+Client will then switch to the voting mode, the client checks the vote pool and chooses the three oldest images by timestamp which have not been voted on at least three times. These images fetched from the trusted server are then displayed, the client must decide whether that images displayed are produced by a human or not.
+Once the client has voted, they produce a commit, which includes a commit nonce + a commit timestamp + the decisions + the image hashes of the target images they voted on. This data is conceternated and then hashed together, and added to the packed image 
 This data is then submitted to the trusted server, this is the commit round
 Other clients progressively poll the trusted server for new commits and load this data into their own clients, verifying the signature matches the submitted data and the hashed raw bytes are the same as the image hash.
-After 30 seconds the reveal is made by the client, the reveal contains a the imagehash of the original image + the original image nonce + the commit timestamp + the commit nonce + the commit decision + the commit Vote target + a signature from the longterm ed25519 key. 
-At the same time th client also submits a vote to the Server, this vote contains some plaintext data which shows the origin image + the vote target + the decision and a signature from the longterm ed25519 keys  
+After 30 seconds the reveal is made by the client, the reveal contains a the imagehash of the original image + the original image nonce + the commit timestamp + the commit nonce + the commit decisions + the commit Vote targets + a signature from the longterm ed25519 key. 
+At the same time the client also submits votes to the Server, these votes contain some plaintext data which shows the origin image + the vote target + the decision and a signature from the longterm ed25519 keys  
 Reveal data is loaded by each client and checked against each fetched image until a match between the original image hash is found with an image already in the database. When a match is found the reveal data is concatenated and hashed, if the hash matches with the committed data and the signature is valid then we consider this a true image.
 True images are loaded to other clients verification screens to be voted on
 
 Server Side Logic 
 
-Servers collect and analyse the votes in their pools to award tokens to users once they prove their humanness.
-CONT HERE
+Server triggers vote recounting anytime a new vote is uploaded to the server
+When a vote arrives it is compared against the origin imagehashes of all of the revealed images if a match is found we proceed to validate that the signature for the vote is produced by the same key in the reveal and that the signature is valid
+If this is valid then the vote is added to the pool of real votes 
+Each time a new vote is added to the pool of votes the server runs a selection process, if any image has over 3 votes which come from different imagehashes then the image is approved aslong as it own vote will be in consensus when released 
 
 Possible Attacks 
 

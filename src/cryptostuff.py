@@ -83,6 +83,7 @@ def commit (selfobj, descion):
     return commit
 
 def reveal(selfobj):
+    #reveals happen on image submision flags
     revealJSON = {}
 
     revealJSON['revealTimestamp'] = str(int(time.time()))

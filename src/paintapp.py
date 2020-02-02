@@ -123,10 +123,20 @@ class PaintApp:
             messagebox.showinfo("Unordered Action","You need to finalize your drawing before you can vote")
             return
 
-        commit = cryptostuff.commit(self, True)
-        self.readyToGo['commit'] = commit
+        self.submissionCount += 1 
+
+        commit = cryptostuff.commit(self,True)
+        self.readyToGo['commit'+str(self.submissionCount)] = commit
         self.imagehash = self.readyToGo['imageHash']
-        postsandgets.uploadfile(self.nonce, self.readyToGo)
+
+
+        if self.submissionCount == self.votesRequiredPerImage:
+            postsandgets.uploadfile(self.nonce, self.readyToGo)
+            return
+            pass        
+        
+        self.renderRandomFetched()
+        #render new image once
 
     def nothumanmade(self):
 
@@ -134,9 +144,21 @@ class PaintApp:
             messagebox.showinfo("Unordered Action","You need to finalize your drawing before you can vote")
             return
 
+        self.submissionCount += 1 
+
         commit = cryptostuff.commit(self,False)
-        self.readyToGo['commit'] = commit
-        postsandgets.uploadfile(self.nonce, self.readyToGo)
+        self.readyToGo['commit'+str(self.submissionCount)] = commit
+        self.imagehash = self.readyToGo['imageHash'] #not sure if this line is doing much? 
+
+
+        if self.submissionCount == self.votesRequiredPerImage:
+            postsandgets.uploadfile(self.nonce, self.readyToGo)
+            return
+            pass        
+
+        self.renderRandomFetched()
+        
+        #when clicked store commit somewhere and load image, when it has been clicked twice submit everything to the network 
 
     def get_sec(self,time_str):
         h, m, s = time_str.split(':')
@@ -185,6 +207,10 @@ class PaintApp:
 
         #Set default finished value to false
         self.finishedgate = False
+
+        #set Default submission and vote counts
+        self.submissionCount = 0 
+        self.votesRequiredPerImage = 2
 
         #GenerateKeys
         cryptostuff.generateOrLoadKeypair(self)

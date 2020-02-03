@@ -170,6 +170,8 @@ class PaintApp:
         self.timertext['text'] = roundarray[1]
 
     def decrementRound(self):
+        #todo, work out why we go into negative time occassionally 
+
         currentintcount = self.get_sec(self.timer['text'])
         newtimeintcount = currentintcount - 1
 
@@ -211,6 +213,7 @@ class PaintApp:
         #set Default submission and vote counts
         self.submissionCount = 0 
         self.votesRequiredPerImage = 2
+        self.revealdata = []
 
         #GenerateKeys
         cryptostuff.generateOrLoadKeypair(self)

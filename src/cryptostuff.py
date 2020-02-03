@@ -61,7 +61,10 @@ def generateOrLoadKeypair(selfobj):
 
 def commit (selfobj, descion):
     revealdata = {}
+ 
     #Commit stage of commit reveal voting, save reveal info in revealdata for a later point
+
+    
 
     revealdata['commitNonce'] = str(random.getrandbits(64))
     revealdata['commitTimestamp'] = str(int(time.time()))
@@ -75,7 +78,8 @@ def commit (selfobj, descion):
         pass
 
     commit = revealdata['commitNonce'] + revealdata['commitTimestamp'] + revealdata['descion'] + revealdata["voteTarget"] 
-    selfobj.revealdata = revealdata
+    
+    selfobj.revealdata.append(revealdata)
     
     commit = commit.encode('utf-8')
     commit = hashlib.blake2b(commit).hexdigest()
@@ -84,26 +88,35 @@ def commit (selfobj, descion):
 
 def reveal(selfobj):
     #reveals happen on image submision flags
+    revealJSONarray = []
     revealJSON = {}
+    counter = 0 
 
-    revealJSON['revealTimestamp'] = str(int(time.time()))
-    revealJSON['imageNonce'] = selfobj.nonce
-    revealJSON['revealCommitNonce'] = selfobj.revealdata['commitNonce']
-    revealJSON['revealCommitTimestamp'] = selfobj.revealdata['commitTimestamp']
-    revealJSON['revealCommitDecision'] = selfobj.revealdata['descion']
-    revealJSON['imageHash'] = selfobj.readyToGo['imageHash']
-    revealJSON['voteTarget'] = selfobj.revealdata['voteTarget']
+    while len(selfobj.revealdata) != counter:
 
-    revealConcat = revealJSON['revealTimestamp'] + revealJSON['imageNonce'] + revealJSON['revealCommitNonce'] + revealJSON['revealCommitTimestamp'] + \
-    revealJSON['revealCommitDecision'] + revealJSON['imageHash'] + revealJSON['voteTarget']
+        revealJSON['revealTimestamp'] = str(int(time.time()))
+        revealJSON['imageNonce'] = selfobj.nonce
+        revealJSON['revealCommitNonce'] = selfobj.revealdata[counter]['commitNonce']
+        revealJSON['revealCommitTimestamp'] = selfobj.revealdata[counter]['commitTimestamp']
+        revealJSON['revealCommitDecision'] = selfobj.revealdata[counter]['descion']
+        revealJSON['imageHash'] = selfobj.readyToGo['imageHash']
+        revealJSON['voteTarget'] = selfobj.revealdata[counter]['voteTarget']
 
-    signature = signString(selfobj, revealConcat)
-    signature =  base64.encodebytes(signature)
-    revealJSON['singature'] = signature.decode('utf-8')
+        revealConcat = revealJSON['revealTimestamp'] + revealJSON['imageNonce'] + revealJSON['revealCommitNonce'] + revealJSON['revealCommitTimestamp'] + \
+        revealJSON['revealCommitDecision'] + revealJSON['imageHash'] + revealJSON['voteTarget']
 
-    createIsolatedVote(selfobj)
+        signature = signString(selfobj, revealConcat)
+        signature =  base64.encodebytes(signature)
+        revealJSON['singature'] = signature.decode('utf-8')
 
-    return revealJSON
+        revealJSONarray.append(revealJSON)
+        revealJSON = {}
+        createIsolatedVote(selfobj) # Need to fix votes submissions, probably because we index reveal data now
+
+        counter +=1
+        pass
+
+    return revealJSONarray
 
 def createIsolatedVote(selfobj):
 #this function is intended to create the vote assciated with the commit on the submitter side

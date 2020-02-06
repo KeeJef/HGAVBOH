@@ -111,7 +111,7 @@ def reveal(selfobj):
 
         revealJSONarray.append(revealJSON)
         revealJSON = {}
-        createIsolatedVote(selfobj) # Need to fix votes submissions, probably because we index reveal data now
+        createIsolatedVote(selfobj)
 
         counter +=1
         pass
@@ -213,34 +213,34 @@ def verifyimages(selfobj):
 
             while len(loadedRevealsJSON) != counter3:
                 
-                loadedRevealsJSON['singature'] = loadedRevealsJSON[1]['singature'].encode('utf-8') #make sure both are indexed lul 
-                loadedRevealsJSON['singature'] = base64.decodebytes(loadedRevealsJSON['singature'])
+                loadedRevealsJSON[counter3]['singature'] = loadedRevealsJSON[counter3]['singature'].encode('utf-8') #make sure both are indexed lul 
+                loadedRevealsJSON[counter3]['singature'] = base64.decodebytes(loadedRevealsJSON[counter3]['singature'])
 
-                preSignData =  loadedRevealsJSON[counter3]['revealTimestamp'] + loadedRevealsJSON['imageNonce'] + loadedRevealsJSON['revealCommitNonce'] + \
-                loadedRevealsJSON['revealCommitTimestamp'] + loadedRevealsJSON['revealCommitDecision'] + loadedRevealsJSON['imageHash'] + loadedRevealsJSON['voteTarget']
+                preSignData =  loadedRevealsJSON[counter3]['revealTimestamp'] + loadedRevealsJSON[counter3]['imageNonce'] + loadedRevealsJSON[counter3]['revealCommitNonce'] + \
+                loadedRevealsJSON[counter3]['revealCommitTimestamp'] + loadedRevealsJSON[counter3]['revealCommitDecision'] + loadedRevealsJSON[counter3]['imageHash'] + loadedRevealsJSON[counter3]['voteTarget']
 
                 #check commit reveals are stil working as epxected with the vote targets addded
-                preRevealData = loadedRevealsJSON['revealCommitNonce'] + loadedRevealsJSON['revealCommitTimestamp'] + loadedRevealsJSON['revealCommitDecision'] + loadedRevealsJSON['voteTarget']
+                preRevealData = loadedRevealsJSON[counter3]['revealCommitNonce'] + loadedRevealsJSON[counter3]['revealCommitTimestamp'] + loadedRevealsJSON[counter3]['revealCommitDecision'] + loadedRevealsJSON[counter3]['voteTarget']
                 preRevealData = preRevealData.encode('utf-8')
                 preRevealData = hashlib.blake2b(preRevealData).hexdigest()
 
                 preSignData = str.encode(preSignData)
 
-                if imageJSON['imageHash'] == loadedRevealsJSON['imageHash']:
+                if imageJSON['imageHash'] == loadedRevealsJSON[counter3]['imageHash']:
 
                     print("hashmatch")
-                    publickey.verify(loadedRevealsJSON['singature'],preSignData) # Start back on this with the better encoded commits and reveals
-                    if imageJSON['commit'] == preRevealData:
+                    publickey.verify(loadedRevealsJSON[counter3]['singature'],preSignData) # Start back on this with the better encoded commits and reveals
+                    if imageJSON['commit'+str(counter3+1)] == preRevealData:
                         print ("commit reveal match")
 
-                        selfobj.loadedimages[counter]['nonce'] = loadedRevealsJSON['imageNonce']
+                        selfobj.loadedimages[counter]['nonce'] = loadedRevealsJSON[counter3]['imageNonce']
 
                         # if all of this has checked out we need to work out what do with their vote, i think it needs to go into a DB and be released when other people 
                         #majority vote them as gucci
                         pass
 
                     pass
-                counter += 1 
+                counter3 += 1 
                 pass
                 
             counter2 += 1 

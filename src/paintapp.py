@@ -82,7 +82,7 @@ class PaintApp:
 
         index = randrange(len(self.loadedimages))
         self.imagechoice  = index
-        imageJSON = self.loadedimages[index]
+        imageJSON = self.loadedimages[index].copy()
 
         imageJSON['imageRawBytes'] = imageJSON['imageRawBytes'].encode('utf-8')
         imageJSON['imageRawBytes'] = base64.decodebytes(imageJSON['imageRawBytes'])

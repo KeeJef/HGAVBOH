@@ -2,7 +2,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from os import path
-import os 
+import os
+import copy 
 import time
 import random
 import postsandgets
@@ -111,11 +112,12 @@ def reveal(selfobj):
 
         revealJSONarray.append(revealJSON)
         revealJSON = {}
-        createIsolatedVote(selfobj)
+        
 
         counter +=1
         pass
 
+    createIsolatedVote(selfobj)
     return revealJSONarray
 
 def createIsolatedVote(selfobj):
@@ -128,8 +130,9 @@ def createIsolatedVote(selfobj):
     while len(selfobj.revealdata) != counter:
 
         voteJSON['originImageHash'] = selfobj.readyToGo['imageHash']
-        voteJSON['voteForImageHash'] = selfobj.revealdata['voteTarget']
-        voteJSON['decision'] = selfobj.revealdata['descion']
+
+        voteJSON['voteForImageHash'] = selfobj.revealdata[counter]['voteTarget']
+        voteJSON['decision'] = selfobj.revealdata[counter]['descion']
 
         presigndata = voteJSON['originImageHash'] + voteJSON['voteForImageHash'] + voteJSON['decision']
 
@@ -138,7 +141,9 @@ def createIsolatedVote(selfobj):
 
         voteJSON['signature'] = signature.decode('utf-8')
 
-        votearray.append(voteJSON)
+        votearray.append(copy.deepcopy(voteJSON))
+
+        counter += 1 
 
         pass
 
@@ -208,7 +213,7 @@ def verifyimages(selfobj):
 
         while len(selfobj.loadedReveals) != counter2:
 
-            loadedRevealsJSON = selfobj.loadedReveals[counter2].copy()
+            loadedRevealsJSON = copy.deepcopy(selfobj.loadedReveals[counter2])
             counter3 = 0
 
             while len(loadedRevealsJSON) != counter3:

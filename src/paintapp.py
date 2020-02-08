@@ -224,8 +224,12 @@ class PaintApp:
 
         postsandgets.getRevealList(self)
         postsandgets.getReveals(self)
+        postsandgets.getVotelist(self)
+        postsandgets.getVotes(self)
 
         cryptostuff.verifyimages(self)
+
+        
         
         #tabs
 

@@ -76,6 +76,33 @@ def getImageList(selfobj):
         pass
     selfobj.imageFileNameList = imageFileNameList
 
+def getVotelist(selfobj):
+    counter = 0
+    voteList = []
+    cookies = login()
+    response = requests.get('http://163.172.168.41:8888/services/files/list/votes', cookies=cookies)
+    jsonresponse  = json.loads(response.text)
+    jsonresponse = jsonresponse['fileInfo']
+
+    while len(jsonresponse)!= counter:
+        voteList.append(jsonresponse[counter]['filePath'])
+        counter += 1
+        pass
+    selfobj.voteList = voteList
+
+
+def getVotes(selfobj):
+    counter = 0
+    selfobj.loadedVotes = []
+    
+    cookies = login()
+    while len(selfobj.voteList) != counter:
+        response =  requests.get('http://163.172.168.41:8888/services/files/download/votes/' + selfobj.voteList[counter], cookies=cookies)
+        selfobj.loadedVotes.append(json.loads(response.text))
+        counter += 1
+        pass
+
+
 def refreshlist(selfobj, mylistbox):
     counter = 0
     #compare current image list with newly fetched image list, if difference download all images again

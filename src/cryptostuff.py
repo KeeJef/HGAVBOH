@@ -177,8 +177,6 @@ def votingCandidates(listofvotes,maxvotes):
 
     voteArray = [i for i in countedArray if countedArray[i]<maxvotes] #goes through array returns image hashes with over maxvotes
 
-    pass
-
     return voteArray
 
 

@@ -76,22 +76,40 @@ class PaintApp:
     def renderRandomFetched(self):
         # Note here that Tkinter passes an event object to on()
         counter = 0 
+        counter2 = 0
         candidatelist = []
+        flag = False
+        alreadyDisplayedImages = []
 
         if len(self.loadedimages) == 0:
             return
             pass
 
+        #sort the loaded images by timestamp and then while around until we get a match with candidate list/ check this against already displayed
+        #eliminate from candidate list weh match is found and add to 
+        #already displayed
 
         candidatelist = cryptostuff.votingCandidates(self.loadedVotes,self.votesRequiredPerImage)
+        self.loadedimages.sort(key=lambda s: s['timestamp'])
 
-        #only display from images which have hashes in the candidate list
+        while len(self.loadedimages) != counter and flag == False:
 
-        index = randrange(len(self.loadedimages))
+            while len(candidatelist) != counter2 and flag == False:
 
+                if self.loadedimages[counter]['imageHash'] == candidatelist[counter2] and self.loadedimages[counter]['imageHash'] not in alreadyDisplayedImages :
 
-        self.imagechoice  = index
-        imageJSON = self.loadedimages[index].copy()
+                    self.imagechoice = counter
+                    imageJSON = self.loadedimages[counter].copy()
+                    alreadyDisplayedImages.append(candidatelist[counter2])
+                    flag = True
+                    pass
+                    
+
+                counter2 += 1
+                pass
+            counter2 = 0
+            counter += 1
+            pass
 
         imageJSON['imageRawBytes'] = imageJSON['imageRawBytes'].encode('utf-8')
         imageJSON['imageRawBytes'] = base64.decodebytes(imageJSON['imageRawBytes'])

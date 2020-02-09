@@ -75,12 +75,21 @@ class PaintApp:
 
     def renderRandomFetched(self):
         # Note here that Tkinter passes an event object to on()
+        counter = 0 
+        candidatelist = []
 
         if len(self.loadedimages) == 0:
             return
             pass
 
+
+        candidatelist = cryptostuff.votingCandidates(self.loadedVotes,self.votesRequiredPerImage)
+
+        #only display from images which have hashes in the candidate list
+
         index = randrange(len(self.loadedimages))
+
+
         self.imagechoice  = index
         imageJSON = self.loadedimages[index].copy()
 

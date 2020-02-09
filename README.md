@@ -36,3 +36,7 @@ Note 2
 
 Word combinations should only ever be valid once, repetition of words should be tracked in the blockchain and and word combo that has already been used should be chucked
 
+Note 3  
+
+Image oldness is dertermined by user timestamp, which is insecure as people can jump the queue, should be determined by some recipent or server timestamp
+

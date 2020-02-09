@@ -4,6 +4,7 @@ from cryptography.hazmat.backends import default_backend
 from os import path
 import os
 import copy 
+import collections
 import time
 import random
 import postsandgets
@@ -150,6 +151,35 @@ def createIsolatedVote(selfobj):
     postsandgets.uploadvotes(selfobj,votearray)
 
     pass
+
+def votingCandidates(listofvotes,maxvotes):
+    counter = 0 
+    counter2 = 0
+    voteArray = []
+    excludedvotes = []
+
+    while len(listofvotes) != counter :
+
+        votespernode = listofvotes[counter]
+
+        while len(votespernode) != counter2:
+
+            voteArray.append(votespernode[counter2]['voteForImageHash'])
+
+            counter2 += 1 
+            pass
+        
+        counter2 = 0
+        counter +=1 
+        pass
+
+    countedArray = collections.Counter(voteArray)
+
+    voteArray = [i for i in countedArray if countedArray[i]<maxvotes] #goes through array returns image hashes with over maxvotes
+
+    pass
+
+    return voteArray
 
 
 def calculateRound():

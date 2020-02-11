@@ -34,7 +34,7 @@ def uploadvotes(selfobj, votesJSON):
         requests.post('http://163.172.168.41:8888/services/files/upload/votes/'+ selfobj.readyToGo['imageHash'] + '.json', cookies=cookies, files=files)
 
 
-def getRevealList(selfobj):
+def getRevealList():
     counter = 0
     revealFileNameList = []
     cookies = login()
@@ -46,23 +46,23 @@ def getRevealList(selfobj):
         revealFileNameList.append(jsonresponse[counter]['filePath'])
         counter += 1
         pass
-    selfobj.revealFileNameList = revealFileNameList
-    return
+    
+    return revealFileNameList
 
-def getReveals(selfobj):
+def getReveals(revealFileNameList):
 
-    selfobj.loadedReveals = []
-    revealFileNameList = selfobj.revealFileNameList
+    loadedReveals = []
     counter = 0
     cookies = login()
     while len(revealFileNameList) != counter:
         response =  requests.get('http://163.172.168.41:8888/services/files/download/reveal/' + revealFileNameList[counter], cookies=cookies)
-        selfobj.loadedReveals.append(json.loads(response.text))
+        loadedReveals.append(json.loads(response.text))
         counter += 1
         pass
+    return loadedReveals
 
 
-def getImageList(selfobj):
+def getImageList():
     counter = 0
     imageFileNameList = []
     cookies = login()
@@ -74,9 +74,9 @@ def getImageList(selfobj):
         imageFileNameList.append(jsonresponse[counter]['filePath'])
         counter += 1
         pass
-    selfobj.imageFileNameList = imageFileNameList
+    return imageFileNameList
 
-def getVotelist(selfobj):
+def getVotelist():
     counter = 0
     voteList = []
     cookies = login()
@@ -88,20 +88,21 @@ def getVotelist(selfobj):
         voteList.append(jsonresponse[counter]['filePath'])
         counter += 1
         pass
-    selfobj.voteList = voteList
+    return voteList
 
 
-def getVotes(selfobj):
+def getVotes(voteList):
     counter = 0
-    selfobj.loadedVotes = []
+    loadedVotes = []
     
     cookies = login()
     while len(selfobj.voteList) != counter:
-        response =  requests.get('http://163.172.168.41:8888/services/files/download/votes/' + selfobj.voteList[counter], cookies=cookies)
-        selfobj.loadedVotes.append(json.loads(response.text))
+        response =  requests.get('http://163.172.168.41:8888/services/files/download/votes/' + voteList[counter], cookies=cookies)
+        loadedVotes.append(json.loads(response.text))
         counter += 1
         pass
 
+    return loadedVotes
 
 def refreshlist(selfobj, mylistbox):
     counter = 0
@@ -122,15 +123,15 @@ def refreshlist(selfobj, mylistbox):
     
     return
 
-def fetchImages(selfobj):
-    selfobj.loadedimages = []
-    imageFileNameList = selfobj.imageFileNameList
+def fetchImages(imageFileNameList):
+    loadedimages = []
+    
     counter = 0
     cookies = login()
     while len(imageFileNameList) != counter:
         response =  requests.get('http://163.172.168.41:8888/services/files/download/newdir/' + imageFileNameList[counter], cookies=cookies)
-        selfobj.loadedimages.append(json.loads(response.text))        
+        loadedimages.append(json.loads(response.text))        
         counter += 1
         pass
 
-
+    return loadedimages

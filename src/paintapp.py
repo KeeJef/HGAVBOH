@@ -246,13 +246,13 @@ class PaintApp:
         cryptostuff.generateOrLoadKeypair(self)
 
         #Pre fetch images for verification
-        postsandgets.getImageList(self)
-        postsandgets.fetchImages(self)
+        self.imageFileNameList = postsandgets.getImageList()
+        self.loadedimages = postsandgets.fetchImages(self.imageFileNameList)
 
-        postsandgets.getRevealList(self)
-        postsandgets.getReveals(self)
-        postsandgets.getVotelist(self)
-        postsandgets.getVotes(self)
+        self.revealFileNameList = postsandgets.getRevealList()
+        self.loadedReveals = postsandgets.getReveals(self.revealFileNameList)
+        self.voteList = postsandgets.getVotelist()
+        self.loadedVotes = postsandgets.getVotes(self.votesList)
 
         cryptostuff.verifyimages(self)
 

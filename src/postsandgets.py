@@ -96,7 +96,7 @@ def getVotes(voteList):
     loadedVotes = []
     
     cookies = login()
-    while len(selfobj.voteList) != counter:
+    while len(voteList) != counter:
         response =  requests.get('http://163.172.168.41:8888/services/files/download/votes/' + voteList[counter], cookies=cookies)
         loadedVotes.append(json.loads(response.text))
         counter += 1

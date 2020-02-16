@@ -1,6 +1,7 @@
 import postsandgets
 
 imagearray = []
+votesRequiredPerImage = 2
 
 
 #This will periodically scan the vote pool and assign tokens based on voting 
@@ -11,7 +12,7 @@ class imageobj:
     voteTally = 0
 
 def subvotetarget(subvote):
-
+    #return existing vote object if we have already created an object for that Target image
     for votecandidate in imagearray:
 
         if votecandidate.imagehash == subvote['voteForImageHash']:
@@ -23,6 +24,7 @@ def subvotetarget(subvote):
     return
 
 def classifyvote(subvote):
+    #determine if the vote is for or agasint and assign a numerical value
     votechange = 0
     if subvote["decision"] == True:
         votechange += 1
@@ -32,6 +34,28 @@ def classifyvote(subvote):
         pass
     return votechange
 
+def backcheckvote(originimagehash):
+    #we want to scan through all the votes looking for atleast threshold postive votes for the origin image hash
+    votecount = 0
+
+    for wholevote in votes:
+
+        for subvote in wholevote:
+
+            if subvote["voteForImageHash"] == originimagehash:
+                increment = classifyvote(subvote)
+                votecount += increment
+            pass
+
+        pass
+    
+    if votecount < votesRequiredPerImage:
+        return False
+        
+    else:
+        return True
+        
+
 
 votelist = postsandgets.getVotelist()
 votes = postsandgets.getVotes(votelist)
@@ -39,6 +63,9 @@ votes = postsandgets.getVotes(votelist)
 for wholevote in votes:
 
     for subvote in wholevote:
+
+        if backcheckvote(subvote['originImageHash']) == False:
+            continue
 
         votetarget = subvotetarget(subvote)
         voteincrement = classifyvote(subvote)
@@ -59,7 +86,6 @@ for wholevote in votes:
 # once this is finised loop through the objects created and sign and encrypt(this maybe a little tricky (put pub key in votes?)) tokens for the image public key
 #If singed token is presented then we know it worked
 
-#we will actually need to have both Real votes and Half votes, 
-#half votes only become real votes when the origin image hash received X real votes
+#basically when we add a vote we want to check if the origin image hash has votes for it, if it does not have atleast vote threshold then we dont add the vote
 
 pass

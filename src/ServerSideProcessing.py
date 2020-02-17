@@ -88,4 +88,6 @@ for wholevote in votes:
 
 #basically when we add a vote we want to check if the origin image hash has votes for it, if it does not have atleast vote threshold then we dont add the vote
 
+#We need to create a real life vote dependency in which A1 is voted on by A2, and A3 and A2 and A3
+
 pass

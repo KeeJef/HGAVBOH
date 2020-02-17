@@ -83,13 +83,13 @@ class PaintApp:
 
         if len(self.loadedimages) == 0:
             return
-            pass
+            
 
         #sort the loaded images by timestamp and then while around until we get a match with candidate list/ check this against already displayed
         #eliminate from candidate list weh match is found and add to 
         #already displayed
 
-        candidatelist = cryptostuff.votingCandidates(self.loadedVotes,self.votesRequiredPerImage)
+        candidatelist = cryptostuff.votingCandidates(self.loadedVotes,self.votesRequiredPerImage,self.loadedimages)
         self.loadedimages.sort(key=lambda s: s['timestamp'])
 
         while len(self.loadedimages) != counter and flag == False:
@@ -252,7 +252,7 @@ class PaintApp:
         self.revealFileNameList = postsandgets.getRevealList()
         self.loadedReveals = postsandgets.getReveals(self.revealFileNameList)
         self.voteList = postsandgets.getVotelist()
-        self.loadedVotes = postsandgets.getVotes(self.votesList)
+        self.loadedVotes = postsandgets.getVotes(self.voteList)
 
         cryptostuff.verifyimages(self)
 

@@ -152,19 +152,22 @@ def createIsolatedVote(selfobj):
 
     pass
 
-def votingCandidates(listofvotes,maxvotes):
+def votingCandidates(listofimagevotes,maxvotes,loadedimages):
+
+    # will return an array of image hashes that have never been voted on, or fall below the maxvote threshold
+
     counter = 0 
     counter2 = 0
     voteArray = []
-    excludedvotes = []
+    loadedImageHashArray = []
 
-    while len(listofvotes) != counter :
+    while len(listofimagevotes) != counter :
 
-        votespernode = listofvotes[counter]
+        specificvote = listofimagevotes[counter]
 
-        while len(votespernode) != counter2:
+        while len(specificvote) != counter2:
 
-            voteArray.append(votespernode[counter2]['voteForImageHash'])
+            voteArray.append(specificvote[counter2]['voteForImageHash'])
 
             counter2 += 1 
             pass
@@ -175,9 +178,19 @@ def votingCandidates(listofvotes,maxvotes):
 
     countedArray = collections.Counter(voteArray)
 
-    voteArray = [i for i in countedArray if countedArray[i]<maxvotes] #goes through array returns image hashes with over maxvotes
+    validImageHashes = [i for i in countedArray if countedArray[i]<maxvotes] #goes through array returns image hashes with under maxvotes
 
-    return voteArray
+    for imagehashes in loadedimages:
+
+        loadedImageHashArray.append(imagehashes["imageHash"])
+
+        pass
+
+    uniqueElements = set(loadedImageHashArray) - set(voteArray)
+    uniqueElements = list(uniqueElements)
+    validImageHashes = validImageHashes + uniqueElements
+
+    return validImageHashes
 
 
 def calculateRound():

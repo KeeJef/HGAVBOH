@@ -118,7 +118,7 @@ def reveal(selfobj):
         counter +=1
         pass
 
-    createIsolatedVote(selfobj)
+    createIsolatedVote(selfobj) # this seems to be out of order, votes should be made after reveals? 
     return revealJSONarray
 
 def createIsolatedVote(selfobj):

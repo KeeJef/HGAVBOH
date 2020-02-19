@@ -79,9 +79,12 @@ class PaintApp:
         counter2 = 0
         candidatelist = []
         flag = False
-        alreadyDisplayedImages = []
+        
 
         if len(self.loadedimages) == 0:
+            if self.finishedgate == True:
+                self.noMoreImages = True
+                pass
             return
             
 
@@ -90,17 +93,23 @@ class PaintApp:
         #already displayed
 
         candidatelist = cryptostuff.votingCandidates(self.loadedVotes,self.votesRequiredPerImage,self.loadedimages)
+
+        # if all voting candidates have already been displayed
+        if (all(elem in self.alreadyDisplayedImages  for elem in candidatelist)):
+            self.noMoreImages = True
+            return
+
         self.loadedimages.sort(key=lambda s: s['timestamp'])
 
         while len(self.loadedimages) != counter and flag == False:
 
             while len(candidatelist) != counter2 and flag == False:
 
-                if self.loadedimages[counter]['imageHash'] == candidatelist[counter2] and self.loadedimages[counter]['imageHash'] not in alreadyDisplayedImages :
+                if self.loadedimages[counter]['imageHash'] == candidatelist[counter2] and self.loadedimages[counter]['imageHash'] not in self.alreadyDisplayedImages :
 
                     self.imagechoice = counter
                     imageJSON = self.loadedimages[counter].copy()
-                    alreadyDisplayedImages.append(candidatelist[counter2])
+                    self.alreadyDisplayedImages.append(candidatelist[counter2])
                     flag = True
                     pass
                     
@@ -157,10 +166,10 @@ class PaintApp:
         self.imagehash = self.readyToGo['imageHash']
 
 
-        if self.submissionCount == self.votesRequiredPerImage:
+        if self.submissionCount == self.votesRequiredPerImage or self.noMoreImages == True: # probably should make this respect the finished flag? 
             postsandgets.uploadfile(self.nonce, self.readyToGo)
             return
-            pass        
+                   
         
         self.renderRandomFetched()
         #render new image once
@@ -178,7 +187,7 @@ class PaintApp:
         self.imagehash = self.readyToGo['imageHash'] #not sure if this line is doing much? 
 
 
-        if self.submissionCount == self.votesRequiredPerImage:
+        if self.submissionCount == self.votesRequiredPerImage or self.noMoreImages == True:
             postsandgets.uploadfile(self.nonce, self.readyToGo)
             return
             pass        
@@ -236,7 +245,8 @@ class PaintApp:
 
         #Set default finished value to false
         self.finishedgate = False
-
+        self.alreadyDisplayedImages = []
+        self.noMoreImages = False
         #set Default submission and vote counts
         self.submissionCount = 0 
         self.votesRequiredPerImage = 2

@@ -167,8 +167,10 @@ def votingCandidates(listofimagevotes,maxvotes,loadedimages):
 
         while len(specificvote) != counter2:
 
-            voteArray.append(specificvote[counter2]['voteForImageHash'])
-
+            if specificvote[counter2]['voteForImageHash'] != 'FAKE IMAGE HASH': #Never vote on the genisis
+                voteArray.append(specificvote[counter2]['voteForImageHash'])
+                pass
+            
             counter2 += 1 
             pass
         

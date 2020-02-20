@@ -81,10 +81,8 @@ class PaintApp:
         flag = False
         
 
-        if len(self.loadedimages) == 0:
-            if self.finishedgate == True:
-                self.noMoreImages = True
-                pass
+        if len(self.loadedimages) == 0:           
+            self.noMoreImages = True
             return
             
 
@@ -93,6 +91,11 @@ class PaintApp:
         #already displayed
 
         candidatelist = cryptostuff.votingCandidates(self.loadedVotes,self.votesRequiredPerImage,self.loadedimages)
+
+        if len(candidatelist) == 1:
+            # if we only return one candidate then we know we are are going to be finished
+            self.noMoreImages = True
+            pass
 
         # if all voting candidates have already been displayed
         if (all(elem in self.alreadyDisplayedImages  for elem in candidatelist)):
@@ -140,7 +143,6 @@ class PaintApp:
         self.verifytextarea.insert(tkinter.END, derivedwords,'center-big')
         self.verifytextarea.config(state=DISABLED)
 
-        # print ('You selected item %d: "%s"' % (index, value))
         return
 
 
@@ -230,7 +232,7 @@ class PaintApp:
 
     def checkRound(self):
         
-        if self.finishedgate == True and self.timertext["text"] == 'Reveal':
+        if self.finishedgate == True and self.timertext["text"] == 'Reveal': #This will reveal even when you haven't finished voting or voted at all
                 postsandgets.uploadreveal(self,cryptostuff.reveal(self)) #issue with reveal data
                 self.finishedgate = False
                 pass

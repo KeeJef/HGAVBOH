@@ -1,5 +1,9 @@
 ![Imgur](https://i.imgur.com/y71NcC9.png)
 
+## Decommissioned 
+
+I've halted work on this project as i've realised that it has an unsolved Sybil attack problem, i thought this would be solved by having votes only be released when they had at least "threshold votes" , but during testing i realised that just kicks the problem down the road. The attack here would just to produce junk images with junk votes for your own images, even though your images won't be verified by other humans you can do this at scale and beat the other humans.  
+
 ## Problem
 
 CAPTCHAs (Completely Automated Public Turing tests to tell Computers and Humans Apart) were invented in the late 90s early 2000’s they have a few major issues 

@@ -26,7 +26,7 @@ def subvotetarget(subvote):
 def classifyvote(subvote):
     #determine if the vote is for or agasint and assign a numerical value
     votechange = 0
-    if subvote["decision"] == True:
+    if subvote['decision'] == 'True':
         votechange += 1
         pass
     else:
@@ -42,16 +42,15 @@ def backcheckvote(originimagehash):
 
         for subvote in wholevote:
 
-            if subvote["voteForImageHash"] == originimagehash:
-                increment = classifyvote(subvote)
+            if subvote["voteForImageHash"] == originimagehash: #if the vote is for orgin image hash
+                increment = classifyvote(subvote) #determines a vote for yes or no -1 for no +1 for yes
                 votecount += increment
             pass
 
         pass
     
     if votecount < votesRequiredPerImage:
-        return False
-        
+        return False    
     else:
         return True
         
@@ -64,7 +63,7 @@ for wholevote in votes:
 
     for subvote in wholevote:
 
-        if backcheckvote(subvote['originImageHash']) == False:
+        if backcheckvote(subvote['originImageHash']) == False: #Checks if we can count this vote as valid, to be valid it needs to have atleast 2 votes its self
             continue
 
         votetarget = subvotetarget(subvote)
@@ -77,9 +76,17 @@ for wholevote in votes:
             image.imagehash = subvote["voteForImageHash"]
             image.voteTally = voteincrement
             imagearray.append(image)
+            pass
+
         pass
 
     pass
+
+for image in imagearray:
+    print(image.imagehash +" "+ str(image.voteTally))
+    pass
+
+
 
 #traverse the data in a nested for loop, when you reach a vote, create an object for that image and assign the vote
 # we need to check the signature matches the images pub key
@@ -90,4 +97,3 @@ for wholevote in votes:
 
 #We need to create a real life vote dependency in which A1 is voted on by A2, and A3 and A2 and A3
 
-pass

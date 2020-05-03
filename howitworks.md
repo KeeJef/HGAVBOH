@@ -80,4 +80,16 @@ Cake Mask Pig Dog Tattoo Locker
 
 There is a potential that if i submit this image, even though it only matches 4 out of the 6 words it will still be verified, it is for this reason that we need to educate users that when they are verfying images all 6 words must match what is stated in the word list. 
 
+Revision 1 - 
+
+Because this will not work as a denctralised tool i want to model this instead on a client server aricture, 
+More thinking will need to be done about how this can be acomplished. 
+
+The goals would be. 
+
+1 - Central server coordinates rounds 
+2 - Must be sybil resitant, hopefully without needing intervention from other methods. 
+3 - must be somewhat fast
+
+
 
